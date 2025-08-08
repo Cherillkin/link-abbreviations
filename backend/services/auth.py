@@ -1,9 +1,14 @@
+from datetime import datetime
+
 from sqlalchemy.orm import Session
 
-from backend.databases.redis_db import save_user_to_redis
+from backend.config.config import JWT_SECRET, ALGORITHM
+from backend.databases.redis_db import save_user_to_redis, redis_client
 from backend.repositories.auth import AuthRepository
 from backend.schemas.auth import RegisterUser, LoginUser, TokenResponse
 from backend.utils.auth import create_access_token
+
+from jose import jwt
 
 class AuthService:
     def __init__(self, repository: AuthRepository):
@@ -30,3 +35,14 @@ class AuthService:
         })
 
         return TokenResponse(access_token=token)
+
+    def logout_user(self, token: str) -> None:
+        try:
+            payload = jwt.decode(token, JWT_SECRET, algorithms=[ALGORITHM])
+            exp = payload.get("exp")
+            now = datetime.utcnow().timestamp()
+            ttl = int(exp - now) if exp else 0
+            if ttl > 0:
+                redis_client.setex(f"blacklist_{token}", ttl, "true")
+        except Exception:
+            pass
