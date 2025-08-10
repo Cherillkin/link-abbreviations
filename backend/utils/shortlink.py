@@ -1,10 +1,17 @@
+from datetime import datetime
+
+import date
 import base64
 import random
 import string
 import qrcode
+
 from io import BytesIO
+
+from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
+from backend.databases.redis_db import redis_client
 from backend.models.shortLink import ShortLink
 
 
@@ -31,3 +38,10 @@ def generate_qr_code(url: str) -> str:
     img.save(buffer, format="PNG")
     return base64.b64encode(buffer.getvalue()).decode()
 
+def check_link_limit(user_id: int, limit: int = 100):
+    key = f"link_count:{user_id}:{datetime.today().isoformat()}"
+    count = redis_client.incr(key)
+    if count == 1:
+        redis_client.expire(key, 86400)
+    if count > limit:
+        raise HTTPException(status_code=429, detail="Daily link creation limit reached")

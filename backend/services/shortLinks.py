@@ -9,7 +9,7 @@ from backend.models.linkClick import LinkClick
 from backend.models.shortLink import ShortLink
 from backend.repositories.shortLinks import ShortLinkRepository
 from backend.schemas.shortLink import ShortLinkCreate, ShortLinkInfo
-from backend.utils.shortlink import generate_unique_code
+from backend.utils.shortlink import generate_unique_code, check_link_limit
 
 
 class ShortLinkService:
@@ -17,6 +17,8 @@ class ShortLinkService:
         self.repository = repository
 
     def create(self, db: Session, user: User, data: ShortLinkCreate) -> ShortLink:
+        check_link_limit(user.id_user, limit=100)
+
         code = data.custom_code or generate_unique_code(db)
 
         if redis_client.exists(code):
