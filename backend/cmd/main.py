@@ -4,7 +4,7 @@ from starlette.middleware.cors import CORSMiddleware
 from backend.repositories.auth import AuthRepository
 from backend.repositories.shortLinks import ShortLinkRepository
 from backend.routing.auth import router as router_auth, get_auth_service
-from backend.routing.shortLinks import router as router_shortlinks, get_link_info
+from backend.routing.shortLinks import router as router_shortlinks, get_link_info, get_short_link_service
 from backend.services.auth import AuthService
 from backend.services.shortLinks import ShortLinkService
 
@@ -19,7 +19,7 @@ app.dependency_overrides[get_auth_service] = lambda: auth_service
 shortLinks_repository = ShortLinkRepository()
 shorLinks_service = ShortLinkService(shortLinks_repository)
 
-app.dependency_overrides[get_link_info] = lambda: shorLinks_service
+app.dependency_overrides[get_short_link_service()] = lambda: shorLinks_service
 
 app.include_router(router_auth)
 app.include_router(router_shortlinks)

@@ -1,5 +1,4 @@
 from datetime import datetime
-from ipaddress import ip_address
 
 from fastapi import HTTPException, Request
 from sqlalchemy.orm import Session
@@ -64,11 +63,29 @@ class ShortLinkService:
         if link.expires_at and link.expires_at < datetime.utcnow():
             raise HTTPException(status_code=410, detail="Link has expired")
 
+        if link.is_protected:
+            raise HTTPException(status_code=403, detail="Password is required to access this link")
+
         click = LinkClick(
             id_link=link.id_link,
             ip_address=request.client.host,
             user_agent=request.headers.get("user-agent"),
             referer=request.headers.get("referer")
         )
+
         self.repository.create_click(db, click)
+
         return link.original_url
+
+    def verify_password_short_link(self, db: Session, code: str, password: str):
+        link = self.repository.get_by_code(db, code)
+        if not link:
+            raise HTTPException(status_code=404, detail="Link not found")
+
+        if not link.is_protected:
+            return {"status": "not_protected", "redirect_url": link.original_url}
+
+        if link.password != password:
+            raise HTTPException(status_code=403, detail="Invalid password")
+
+        return link

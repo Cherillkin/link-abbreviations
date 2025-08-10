@@ -15,13 +15,9 @@ class ShortLink(Base):
     expires_at = Column(DateTime, nullable=True)
     is_protected = Column(Boolean, default=False)
     password = Column(String, nullable=True)
-    custom_domain = Column(String, nullable=True)
-
     id_creator = Column(Integer, ForeignKey("Users.id_user"), nullable=False)
-    id_tag = Column(Integer, ForeignKey("Tags.id_tag"), nullable=True)
 
     creator = relationship("User", back_populates="links")
-    tag = relationship("Tag", back_populates="links")
 
     clicks = relationship("LinkClick", back_populates="link")
 
@@ -30,5 +26,3 @@ class Tag(Base):
 
     id_tag = Column(Integer, primary_key=True)
     name = Column(String, unique=True, nullable=False)
-
-    links = relationship("ShortLink", back_populates="tag")
