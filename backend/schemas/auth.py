@@ -6,8 +6,7 @@ class UserBase(BaseModel):
     password: str
 
 class RegisterUser(UserBase):
-    id_role: int
-    created_at: datetime
+    pass
 
 class LoginUser(UserBase):
     pass

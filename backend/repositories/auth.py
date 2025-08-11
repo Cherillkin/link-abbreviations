@@ -20,7 +20,7 @@ class AuthRepository:
             user = User(
                 email = user_data.email,
                 password = hashed_password,
-                id_role = user_data.id_role,
+                id_role = 1,
                 created_at = datetime.utcnow()
             )
 
