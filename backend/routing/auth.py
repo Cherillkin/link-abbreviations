@@ -14,13 +14,13 @@ def get_auth_service() -> AuthService:
 
 @router.post("/sign-up", responses={400: {"description": "Bad request"}},
              response_model=TokenResponse, description="Регистрация пользователя")
-async def SignUp(user: RegisterUser, db: Session = Depends(get_db),
+def SignUp(user: RegisterUser, db: Session = Depends(get_db),
                  auth_service: AuthService = Depends(get_auth_service)):
     return auth_service.register_user(user, db)
 
 @router.post("/sign-in", responses={400: {"description": "Bad request"}},
              response_model=TokenResponse, description="Авторизация пользователя")
-async def SignIn(user: LoginUser, db: Session = Depends(get_db), response: Response = None,
+def SignIn(user: LoginUser, db: Session = Depends(get_db), response: Response = None,
                  auth_service: AuthService = Depends(get_auth_service)):
     token = auth_service.login_user(user, db)
 
@@ -37,7 +37,7 @@ async def SignIn(user: LoginUser, db: Session = Depends(get_db), response: Respo
     return token
 
 @router.post("/logout", responses={400: {"description": "Bad request"}}, description="Выход")
-async def Logout(request: Request, response: Response, auth_service: AuthService = Depends(get_auth_service)):
+def Logout(request: Request, response: Response, auth_service: AuthService = Depends(get_auth_service)):
     token = request.cookies.get("access_token")
     if not token:
         return {"message": "No token found"}

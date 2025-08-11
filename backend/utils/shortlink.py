@@ -1,6 +1,5 @@
 from datetime import datetime
 
-import date
 import base64
 import random
 import string

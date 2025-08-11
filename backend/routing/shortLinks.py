@@ -6,6 +6,7 @@ from backend.databases.postgres import get_db
 from backend.repositories.shortLinks import ShortLinkRepository
 from backend.schemas.shortLink import ShortLinkInfo, ShortLinkCreate
 from backend.services.shortLinks import ShortLinkService
+from backend.tasks.shortlinks import generate_qr_code_task
 from backend.utils.auth import get_current_user
 from backend.models.auth import User
 from backend.utils.shortlink import generate_qr_code
@@ -47,17 +48,17 @@ def verify_password(code: str, password: str, db: Session = Depends(get_db), ser
     return {"status": status, "redirect_url": link.original_url}
 
 @router.post("/{code}/qr", responses={400: {"description": "Bad Request"}}, description="Создания QR-кода")
-def generate_qr_for_link(code: str, request: Request, db: Session = Depends(get_db), service: ShortLinkService = Depends(get_short_link_service)):
+def generate_qr_for_link(code: str, request: Request, db: Session = Depends(get_db),
+                         service: ShortLinkService = Depends(get_short_link_service)):
     link = service.get_info(db, code)
     if not link:
         raise HTTPException(status_code=404, detail="Link not found")
 
     short_url = f"{request.base_url}short-links/r/{link.short_code}"
-    qr_code_base64 = generate_qr_code(short_url)
+    task = generate_qr_code_task.delay(short_url)
 
     return {
-        "short_url": short_url,
-        "original_url": link.original_url,
-        "qr_code_base64": qr_code_base64
+        "task_id": task.id,
+        "status": "processing"
     }
 

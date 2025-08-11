@@ -5,10 +5,10 @@ from sqlalchemy.orm import Session
 
 from backend.databases.redis_db import redis_client
 from backend.models.auth import User
-from backend.models.linkClick import LinkClick
 from backend.models.shortLink import ShortLink
 from backend.repositories.shortLinks import ShortLinkRepository
 from backend.schemas.shortLink import ShortLinkCreate, ShortLinkInfo
+from backend.tasks.shortlinks import log_click_task
 from backend.utils.shortlink import generate_unique_code, check_link_limit
 
 
@@ -27,16 +27,21 @@ class ShortLinkService:
         if self.repository.is_code_taken(db, code):
             raise HTTPException(status_code=400, detail="Code is already using")
 
-        link = ShortLink(
-            original_url=str(data.original_url),
-            short_code=code,
-            id_creator=user.id_user,
-            expires_at=data.expires_at,
-            is_protected=data.is_protected,
-            password=data.password
-        )
+        try:
+            link = ShortLink(
+                original_url=str(data.original_url),
+                short_code=code,
+                id_creator=user.id_user,
+                expires_at=data.expires_at,
+                is_protected=data.is_protected,
+                password=data.password
+            )
 
-        created_link = self.repository.create(db, link)
+            created_link = self.repository.create(db, link)
+        
+        except Exception as e:
+            db.rollback()
+            raise HTTPException(status_code=500, detail=f"Error to register user: {str(e)}")
 
         redis_client.setex(code, 3600, created_link.original_url)
 
@@ -68,16 +73,15 @@ class ShortLinkService:
         if link.is_protected:
             raise HTTPException(status_code=403, detail="Password is required to access this link")
 
-        click = LinkClick(
-            id_link=link.id_link,
-            ip_address=request.client.host,
-            user_agent=request.headers.get("user-agent"),
-            referer=request.headers.get("referer")
+        log_click_task.delay(
+            link.id_link,
+            request.client.host,
+            request.headers.get("user-agent"),
+            request.headers.get("referer")
         )
 
-        self.repository.create_click(db, click)
-
         return link.original_url
+
 
     def verify_password_short_link(self, db: Session, code: str, password: str):
         link = self.repository.get_by_code(db, code)
