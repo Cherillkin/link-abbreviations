@@ -1,8 +1,10 @@
-# created by virtualenv automatically
 .idea
-.env
+backend/.env
 /migrations/
 alembic.ini
 .venv/
-__pycache__/
+backend/__pycache__/
 *.py[cod]
+test.db
+celerybeat-schedule
+.pre-commit-config.yaml

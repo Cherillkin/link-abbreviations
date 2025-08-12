@@ -6,7 +6,11 @@ from typing import List, Union
 from backend.databases.postgres import get_db
 from backend.models import ShortLink
 from backend.repositories.shortLinks import ShortLinkRepository
-from backend.schemas.shortLink import ShortLinkInfo, ShortLinkCreate
+from backend.schemas.shortLink import (
+    ShortLinkInfo,
+    ShortLinkCreate,
+    ShortLinkInfoWithClick,
+)
 from backend.services.shortLinks import ShortLinkService
 from backend.tasks.shortlinks import generate_qr_code_task
 from backend.utils.auth import get_current_user
@@ -44,14 +48,14 @@ async def create_short_link(
 @router.get(
     "/{code}",
     responses={400: {"description": "Bad Request"}},
-    response_model=ShortLinkInfo,
+    response_model=ShortLinkInfoWithClick,
     description="Просмотр информации о ссылке",
 )
 def get_link_info(
     code: str,
     db: Session = Depends(get_db),
     service: ShortLinkService = Depends(get_short_link_service),
-) -> ShortLinkInfo:
+) -> ShortLinkInfoWithClick:
     return service.get_info(db, code)
 
 

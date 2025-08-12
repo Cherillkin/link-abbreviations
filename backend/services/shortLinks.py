@@ -8,7 +8,7 @@ from backend.databases.redis_db import redis_client
 from backend.models.auth import User
 from backend.models.shortLink import ShortLink
 from backend.repositories.shortLinks import ShortLinkRepository
-from backend.schemas.shortLink import ShortLinkCreate, ShortLinkInfo
+from backend.schemas.shortLink import ShortLinkCreate, ShortLinkInfoWithClick
 from backend.tasks.shortlinks import log_click_task
 from backend.utils.shortlink import generate_unique_code, check_link_limit
 
@@ -52,14 +52,14 @@ class ShortLinkService:
 
         return created_link
 
-    def get_info(self, db: Session, code: str) -> ShortLinkInfo:
+    def get_info(self, db: Session, code: str) -> ShortLinkInfoWithClick:
         link = self.repository.get_by_code(db, code)
         if not link:
             raise HTTPException(status_code=404, detail="Link not found")
 
         clicks = self.repository.count_clicks(db, link.id_link)
 
-        return ShortLinkInfo(
+        return ShortLinkInfoWithClick(
             short_code=link.short_code,
             original_url=link.original_url,
             created_at=link.created_at,
@@ -67,7 +67,7 @@ class ShortLinkService:
             click_count=clicks,
         )
 
-    def get_all_links_code(self, db: Session) -> List[ShortLinkInfo]:
+    def get_all_links_code(self, db: Session) -> List[ShortLinkInfoWithClick]:
         links = self.repository.get_all_links_code(db)
         if not links:
             raise HTTPException(status_code=404, detail="List is empty")

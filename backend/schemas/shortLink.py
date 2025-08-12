@@ -14,5 +14,9 @@ class ShortLinkCreate(BaseModel):
 class ShortLinkInfo(BaseModel):
     short_code: str
     original_url: HttpUrl
-    created_at: datetime
     expires_at: Optional[datetime]
+
+
+class ShortLinkInfoWithClick(ShortLinkInfo):
+    created_at: datetime
+    click_count: Optional[int] = None
