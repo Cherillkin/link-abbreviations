@@ -1,10 +1,26 @@
+# Environment
 .env
-.idea
 .venv/
-test.db
-*.py[cod]
-alembic.ini
-/migrations/
+venv/
+
+# IDE configs
+.idea/
+.vscode/
+
+# Python cache
 __pycache__/
-.pre-commit-config.yaml
+*.py[cod]
+
+# Database
+test.db
+*.sqlite3
+
+# Alembic
+alembic.ini
+migrations/
+
+# Celery
 backend/celerybeat-schedule
+
+# Pre-commit config
+.pre-commit-config.yaml
