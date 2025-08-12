@@ -10,6 +10,7 @@ from io import BytesIO
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
+from backend.config.config import DAILY_LINK_LIMIT
 from backend.databases.redis_db import redis_client
 from backend.models.shortLink import ShortLink
 
@@ -39,7 +40,7 @@ def generate_qr_code(url: str) -> str:
     return base64.b64encode(buffer.getvalue()).decode()
 
 
-def check_link_limit(user_id: int, limit: int = 100) -> None:
+def check_link_limit(user_id: int, limit: int = DAILY_LINK_LIMIT) -> None:
     key = f"link_count:{user_id}:{datetime.today().isoformat()}"
     count = redis_client.incr(key)
     if count == 1:

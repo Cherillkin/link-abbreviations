@@ -10,3 +10,10 @@ CELERY_BROKER_BACKEND = os.getenv("CELERY_RESULT_BACKEND")
 JWT_SECRET = os.getenv("JWT_SECRET")
 ALGORITHM = os.getenv("ALGORITHM")
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "30"))
+
+
+DAILY_LINK_LIMIT = int(os.getenv("DAILY_LINK_LIMIT", 100))
+LINK_COUNT_TTL = int(os.getenv("LINK_COUNT_TTL", 86400))
+CACHE_TTL = int(os.getenv("CACHE_TTL", 3600))
+QR_BOX_SIZE = int(os.getenv("QR_BOX_SIZE", 10))
+QR_BORDER = int(os.getenv("QR_BORDER", 4))

@@ -4,6 +4,7 @@ from fastapi import HTTPException, Request
 from sqlalchemy.orm import Session
 from typing import List, Union
 
+from backend.config.config import DAILY_LINK_LIMIT
 from backend.databases.redis_db import redis_client
 from backend.models.auth import User
 from backend.models.shortLink import ShortLink
@@ -18,7 +19,7 @@ class ShortLinkService:
         self.repository = repository
 
     def create(self, db: Session, user: User, data: ShortLinkCreate) -> ShortLink:
-        check_link_limit(user.id_user, limit=100)
+        check_link_limit(user.id_user, limit=DAILY_LINK_LIMIT)
 
         code = data.custom_code or generate_unique_code(db)
 

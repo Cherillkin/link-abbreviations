@@ -1,0 +1,10 @@
+.env
+.idea
+.venv/
+test.db
+*.py[cod]
+alembic.ini
+/migrations/
+__pycache__/
+.pre-commit-config.yaml
+backend/celerybeat-schedule
