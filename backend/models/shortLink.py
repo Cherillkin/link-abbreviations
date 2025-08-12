@@ -5,6 +5,7 @@ from sqlalchemy.orm import relationship
 
 from backend.databases.postgres import Base
 
+
 class ShortLink(Base):
     __tablename__ = "ShortLinks"
 
@@ -20,6 +21,7 @@ class ShortLink(Base):
     creator = relationship("User", back_populates="links")
 
     clicks = relationship("LinkClick", back_populates="link")
+
 
 class Tag(Base):
     __tablename__ = "Tags"

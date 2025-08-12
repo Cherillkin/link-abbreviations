@@ -5,7 +5,10 @@ from backend.repositories.auth import AuthRepository
 from backend.repositories.shortLinks import ShortLinkRepository
 from backend.repositories.user import UserRepository
 from backend.routing.auth import router as router_auth, get_auth_service
-from backend.routing.shortLinks import router as router_shortlinks, get_short_link_service
+from backend.routing.shortLinks import (
+    router as router_shortlinks,
+    get_short_link_service,
+)
 from backend.routing.user import router as router_user, get_user_service
 from backend.services.auth import AuthService
 from backend.services.shortLinks import ShortLinkService

@@ -5,6 +5,7 @@ from sqlalchemy.orm import relationship
 
 from backend.databases.postgres import Base
 
+
 class LinkClick(Base):
     __tablename__ = "LinkClicks"
 

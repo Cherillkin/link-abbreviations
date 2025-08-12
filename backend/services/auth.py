@@ -10,6 +10,7 @@ from backend.utils.auth import create_access_token
 
 from jose import jwt
 
+
 class AuthService:
     def __init__(self, repository: AuthRepository):
         self.repository = repository
@@ -18,10 +19,13 @@ class AuthService:
         user = self.repository.register_user(user_data, db)
         token = create_access_token(data={"sub": str(user.id_user)})
 
-        save_user_to_redis(user.id_user, {
-            "id": user.id_user,
-            "email": user.email,
-        })
+        save_user_to_redis(
+            user.id_user,
+            {
+                "id": user.id_user,
+                "email": user.email,
+            },
+        )
 
         return TokenResponse(access_token=token)
 
@@ -29,10 +33,13 @@ class AuthService:
         user = self.repository.login_user(user_data, db)
         token = create_access_token(data={"sub": str(user.id_user)})
 
-        save_user_to_redis(user.id_user, {
-            "id": user.id_user,
-            "email": user.email,
-        })
+        save_user_to_redis(
+            user.id_user,
+            {
+                "id": user.id_user,
+                "email": user.email,
+            },
+        )
 
         return TokenResponse(access_token=token)
 

@@ -12,16 +12,18 @@ class AuthRepository:
     def register_user(self, user_data: RegisterUser, db: Session) -> User:
         existing_user = db.query(User).filter(User.email == user_data.email).first()
         if existing_user:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="User already exists")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, detail="User already exists"
+            )
 
         hashed_password = hash_password(user_data.password)
 
         try:
             user = User(
-                email = user_data.email,
-                password = hashed_password,
-                id_role = 1,
-                created_at = datetime.utcnow()
+                email=user_data.email,
+                password=hashed_password,
+                id_role=2,
+                created_at=datetime.utcnow(),
             )
 
             db.add(user)
@@ -30,7 +32,9 @@ class AuthRepository:
 
         except Exception as e:
             db.rollback()
-            raise HTTPException(status_code=500, detail=f"Error to register user: {str(e)}")
+            raise HTTPException(
+                status_code=500, detail=f"Error to register user: {str(e)}"
+            )
 
         return user
 

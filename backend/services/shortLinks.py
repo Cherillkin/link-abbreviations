@@ -2,6 +2,7 @@ from datetime import datetime
 
 from fastapi import HTTPException, Request
 from sqlalchemy.orm import Session
+from typing import List, Union
 
 from backend.databases.redis_db import redis_client
 from backend.models.auth import User
@@ -22,7 +23,9 @@ class ShortLinkService:
         code = data.custom_code or generate_unique_code(db)
 
         if redis_client.exists(code):
-            raise HTTPException(status_code=400, detail="Short code is already used (cached)")
+            raise HTTPException(
+                status_code=400, detail="Short code is already used (cached)"
+            )
 
         if self.repository.is_code_taken(db, code):
             raise HTTPException(status_code=400, detail="Code is already using")
@@ -34,14 +37,16 @@ class ShortLinkService:
                 id_creator=user.id_user,
                 expires_at=data.expires_at,
                 is_protected=data.is_protected,
-                password=data.password
+                password=data.password,
             )
 
             created_link = self.repository.create(db, link)
-        
+
         except Exception as e:
             db.rollback()
-            raise HTTPException(status_code=500, detail=f"Error to register user: {str(e)}")
+            raise HTTPException(
+                status_code=500, detail=f"Error to register user: {str(e)}"
+            )
 
         redis_client.setex(code, 3600, created_link.original_url)
 
@@ -59,8 +64,15 @@ class ShortLinkService:
             original_url=link.original_url,
             created_at=link.created_at,
             expires_at=link.expires_at,
-            click_count=clicks
+            click_count=clicks,
         )
+
+    def get_all_links_code(self, db: Session) -> List[ShortLinkInfo]:
+        links = self.repository.get_all_links_code(db)
+        if not links:
+            raise HTTPException(status_code=404, detail="List is empty")
+
+        return links
 
     def redirect(self, db: Session, code: str, request: Request) -> str:
         link = self.repository.get_by_code(db, code)
@@ -71,19 +83,22 @@ class ShortLinkService:
             raise HTTPException(status_code=410, detail="Link has expired")
 
         if link.is_protected:
-            raise HTTPException(status_code=403, detail="Password is required to access this link")
+            raise HTTPException(
+                status_code=403, detail="Password is required to access this link"
+            )
 
         log_click_task.delay(
             link.id_link,
             request.client.host,
             request.headers.get("user-agent"),
-            request.headers.get("referer")
+            request.headers.get("referer"),
         )
 
         return link.original_url
 
-
-    def verify_password_short_link(self, db: Session, code: str, password: str):
+    def verify_password_short_link(
+        self, db: Session, code: str, password: str
+    ) -> Union[dict, ShortLink]:
         link = self.repository.get_by_code(db, code)
         if not link:
             raise HTTPException(status_code=404, detail="Link not found")

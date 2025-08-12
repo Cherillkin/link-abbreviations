@@ -10,27 +10,28 @@ from backend.utils.shortlink import generate_qr_code
 
 
 @celery.task
-def log_click_task(id_link: int, ip: str, user_agent: str, referer: str):
+def log_click_task(id_link: int, ip: str, user_agent: str, referer: str) -> None:
     db = SessionLocal()
     try:
         click = LinkClick(
-            id_link=id_link,
-            ip_address=ip,
-            user_agent=user_agent,
-            referer=referer
+            id_link=id_link, ip_address=ip, user_agent=user_agent, referer=referer
         )
         db.add(click)
         db.commit()
     finally:
         db.close()
 
+
 @celery.task
-def delete_expired_links():
+def delete_expired_links() -> None:
     db = SessionLocal()
     try:
         now = datetime.utcnow()
         deleted_count = (
-            db.query(ShortLink).filter(ShortLink.expires_at != None).filter(ShortLink.expires_at < now).delete(synchronize_session=False)
+            db.query(ShortLink)
+            .filter(ShortLink.expires_at != None)
+            .filter(ShortLink.expires_at < now)
+            .delete(synchronize_session=False)
         )
         db.commit()
         print(f"[delete_expired_links] Deleted {deleted_count} expired links")
@@ -40,8 +41,9 @@ def delete_expired_links():
     finally:
         db.close()
 
+
 @celery.task
-def check_original_url(id_link: int, original_url: str):
+def check_original_url(id_link: int, original_url: str) -> None:
     db = SessionLocal()
     try:
         try:
@@ -59,7 +61,8 @@ def check_original_url(id_link: int, original_url: str):
     finally:
         db.close()
 
+
 @celery.task
 def generate_qr_code_task(short_url: str) -> str:
-    qr_base64  = generate_qr_code(short_url)
+    qr_base64 = generate_qr_code(short_url)
     return qr_base64

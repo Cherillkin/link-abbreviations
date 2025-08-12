@@ -18,6 +18,7 @@ class User(Base):
     role = relationship("Role", back_populates="user")
     links = relationship("ShortLink", back_populates="creator")
 
+
 class Role(Base):
     __tablename__ = "Roles"
 

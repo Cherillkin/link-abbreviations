@@ -8,7 +8,7 @@ celery = Celery(
     backend=CELERY_BROKER_BACKEND,
     include=[
         "backend.tasks.shortlinks",
-    ]
+    ],
 )
 
 celery.conf.beat_schedule = {

@@ -16,4 +16,3 @@ class ShortLinkInfo(BaseModel):
     original_url: HttpUrl
     created_at: datetime
     expires_at: Optional[datetime]
-    click_count: int

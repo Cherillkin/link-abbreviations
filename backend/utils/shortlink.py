@@ -17,16 +17,17 @@ from backend.models.shortLink import ShortLink
 def generate_unique_code(db: Session, length: int = 6) -> str:
     characters = string.ascii_letters + string.digits
     while True:
-        code = ''.join(random.choices(characters, k=length))
+        code = "".join(random.choices(characters, k=length))
         if not db.query(ShortLink).filter_by(short_code=code).first():
             return code
+
 
 def generate_qr_code(url: str) -> str:
     qr = qrcode.QRCode(
         version=1,
         error_correction=qrcode.constants.ERROR_CORRECT_L,
         box_size=10,
-        border=4
+        border=4,
     )
 
     qr.add_data(url)
@@ -37,7 +38,8 @@ def generate_qr_code(url: str) -> str:
     img.save(buffer, format="PNG")
     return base64.b64encode(buffer.getvalue()).decode()
 
-def check_link_limit(user_id: int, limit: int = 100):
+
+def check_link_limit(user_id: int, limit: int = 100) -> None:
     key = f"link_count:{user_id}:{datetime.today().isoformat()}"
     count = redis_client.incr(key)
     if count == 1:

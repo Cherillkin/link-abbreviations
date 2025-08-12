@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, List
 
 from sqlalchemy.orm import Session
 
@@ -25,3 +25,6 @@ class ShortLinkRepository:
     def create_click(self, db: Session, click: LinkClick) -> None:
         db.add(click)
         db.commit()
+
+    def get_all_links_code(self, db: Session) -> List[ShortLink]:
+        return db.query(ShortLink).all()

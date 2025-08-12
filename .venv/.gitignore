@@ -1,6 +1,8 @@
 # created by virtualenv automatically
 .idea
-*.env
-*docker-compose.yml
-*migrations
-*alembic.ini
+.env
+/migrations/
+alembic.ini
+.venv/
+__pycache__/
+*.py[cod]
