@@ -3,10 +3,13 @@ from starlette.middleware.cors import CORSMiddleware
 
 from backend.repositories.auth import AuthRepository
 from backend.repositories.shortLinks import ShortLinkRepository
+from backend.repositories.user import UserRepository
 from backend.routing.auth import router as router_auth, get_auth_service
 from backend.routing.shortLinks import router as router_shortlinks, get_short_link_service
+from backend.routing.user import router as router_user, get_user_service
 from backend.services.auth import AuthService
 from backend.services.shortLinks import ShortLinkService
+from backend.services.user import UserService
 
 app = FastAPI(openapi_url="/core/openapi.json", docs_url="/core/docs")
 
@@ -20,8 +23,14 @@ shorLinks_service = ShortLinkService(shortLinks_repository)
 
 app.dependency_overrides[get_short_link_service()] = lambda: shorLinks_service
 
+user_repository = UserRepository()
+user_service = UserService(user_repository)
+
+app.dependency_overrides[get_user_service] = lambda: user_service
+
 app.include_router(router_auth)
 app.include_router(router_shortlinks)
+app.include_router(router_user)
 
 app.add_middleware(
     CORSMiddleware,
