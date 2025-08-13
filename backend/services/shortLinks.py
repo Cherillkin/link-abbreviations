@@ -1,17 +1,21 @@
 from datetime import datetime
 
-from fastapi import HTTPException, Request
+from fastapi import HTTPException, Request, status
 from sqlalchemy.orm import Session
 from typing import List, Union
 
-from backend.config.config import DAILY_LINK_LIMIT
+from backend.config.config import settings
 from backend.databases.redis_db import redis_client
 from backend.models.auth import User
 from backend.models.shortLink import ShortLink
 from backend.repositories.shortLinks import ShortLinkRepository
 from backend.schemas.shortLink import ShortLinkCreate, ShortLinkInfoWithClick
 from backend.tasks.shortlinks import log_click_task
-from backend.utils.shortlink import generate_unique_code, check_link_limit
+from backend.utils.shortlink import (
+    generate_unique_code,
+    check_link_limit,
+    validate_custom_code,
+)
 
 
 class ShortLinkService:
@@ -19,17 +23,23 @@ class ShortLinkService:
         self.repository = repository
 
     def create(self, db: Session, user: User, data: ShortLinkCreate) -> ShortLink:
-        check_link_limit(user.id_user, limit=DAILY_LINK_LIMIT)
+        check_link_limit(user.id_user, limit=settings.daily_link_limit)
 
         code = data.custom_code or generate_unique_code(db)
 
+        if data.custom_code:
+            validate_custom_code(code)
+
         if redis_client.exists(code):
             raise HTTPException(
-                status_code=400, detail="Short code is already used (cached)"
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Short code is already used (cached)",
             )
 
         if self.repository.is_code_taken(db, code):
-            raise HTTPException(status_code=400, detail="Code is already using")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, detail="Code is already using"
+            )
 
         try:
             link = ShortLink(
@@ -46,17 +56,20 @@ class ShortLinkService:
         except Exception as e:
             db.rollback()
             raise HTTPException(
-                status_code=500, detail=f"Error to register user: {str(e)}"
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Error to register user: {str(e)}",
             )
 
-        redis_client.setex(code, 3600, created_link.original_url)
+        redis_client.setex(code, settings.cache_ttl, created_link.original_url)
 
         return created_link
 
     def get_info(self, db: Session, code: str) -> ShortLinkInfoWithClick:
         link = self.repository.get_by_code(db, code)
         if not link:
-            raise HTTPException(status_code=404, detail="Link not found")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Link not found"
+            )
 
         clicks = self.repository.count_clicks(db, link.id_link)
 
@@ -71,21 +84,28 @@ class ShortLinkService:
     def get_all_links_code(self, db: Session) -> List[ShortLinkInfoWithClick]:
         links = self.repository.get_all_links_code(db)
         if not links:
-            raise HTTPException(status_code=404, detail="List is empty")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="List is empty"
+            )
 
         return links
 
     def redirect(self, db: Session, code: str, request: Request) -> str:
         link = self.repository.get_by_code(db, code)
         if not link:
-            raise HTTPException(status_code=404, detail="Link not found")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Link not found"
+            )
 
         if link.expires_at and link.expires_at < datetime.utcnow():
-            raise HTTPException(status_code=410, detail="Link has expired")
+            raise HTTPException(
+                status_code=status.HTTP_410_GONE, detail="Link has expired"
+            )
 
         if link.is_protected:
             raise HTTPException(
-                status_code=403, detail="Password is required to access this link"
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Password is required to access this link",
             )
 
         log_click_task.delay(
@@ -102,12 +122,16 @@ class ShortLinkService:
     ) -> Union[dict, ShortLink]:
         link = self.repository.get_by_code(db, code)
         if not link:
-            raise HTTPException(status_code=404, detail="Link not found")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Link not found"
+            )
 
         if not link.is_protected:
             return {"status": "not_protected", "redirect_url": link.original_url}
 
         if link.password != password:
-            raise HTTPException(status_code=403, detail="Invalid password")
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN, detail="Invalid password"
+            )
 
         return link

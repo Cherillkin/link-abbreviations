@@ -1,19 +1,46 @@
-import os
+from typing import Optional
 
-REDIS_HOST = os.getenv("REDIS_HOST")
-REDIS_PORT = os.getenv("REDIS_PORT")
-REDIS_DB = os.getenv("REDIS_DB")
-
-CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL")
-CELERY_BROKER_BACKEND = os.getenv("CELERY_RESULT_BACKEND")
-
-JWT_SECRET = os.getenv("JWT_SECRET")
-ALGORITHM = os.getenv("ALGORITHM")
-ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "30"))
+from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import Field
 
 
-DAILY_LINK_LIMIT = int(os.getenv("DAILY_LINK_LIMIT", 100))
-LINK_COUNT_TTL = int(os.getenv("LINK_COUNT_TTL", 86400))
-CACHE_TTL = int(os.getenv("CACHE_TTL", 3600))
-QR_BOX_SIZE = int(os.getenv("QR_BOX_SIZE", 10))
-QR_BORDER = int(os.getenv("QR_BORDER", 4))
+class Settings(BaseSettings):
+    redis_host: str = Field("localhost", validation_alias="REDIS_HOST")
+    redis_port: int = Field(6379, validation_alias="REDIS_PORT")
+    redis_db: int = Field(0, validation_alias="REDIS_DB")
+
+    celery_broker_url: str = Field(
+        "redis://localhost:6379/0", validation_alias="CELERY_BROKER_URL"
+    )
+    celery_result_backend: str = Field(
+        "redis://localhost:6379/0", validation_alias="CELERY_RESULT_BACKEND"
+    )
+
+    jwt_secret: str = Field("9VHleSjX-C", validation_alias="JWT_SECRET")
+    algorithm: str = Field("HS256", validation_alias="ALGORITHM")
+    access_token_expire_minutes: int = Field(
+        30, validation_alias="ACCESS_TOKEN_EXPIRE_MINUTES"
+    )
+
+    daily_link_limit: int = Field(100, validation_alias="DAILY_LINK_LIMIT")
+    link_count_ttl: int = Field(86400, validation_alias="LINK_COUNT_TTL")
+    cache_ttl: int = Field(3600, validation_alias="CACHE_TTL")
+
+    generate_unique_code_length: int = Field(
+        6, validation_alias="GENERATE_UNIQUE_CODE_LENGTH"
+    )
+    qr_box_size: int = Field(10, validation_alias="QR_BOX_SIZE")
+    qr_border: int = Field(4, validation_alias="QR_BORDER")
+
+    database_url: str = Field("sqlite:///./test.db", validation_alias="DATABASE_URL")
+
+    postgres_user: Optional[str] = Field(None, validation_alias="POSTGRES_USER")
+    postgres_password: Optional[str] = Field(None, validation_alias="POSTGRES_PASSWORD")
+    postgres_db: Optional[str] = Field(None, validation_alias="POSTGRES_DB")
+
+    model_config = SettingsConfigDict(
+        env_file=".env", env_file_encoding="utf-8", extra="ignore"
+    )
+
+
+settings = Settings()

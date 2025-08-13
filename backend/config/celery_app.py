@@ -1,11 +1,11 @@
 from celery import Celery
 
-from backend.config.config import CELERY_BROKER_URL, CELERY_BROKER_BACKEND
+from backend.config.config import settings
 
 celery = Celery(
     "shortlinks",
-    broker=CELERY_BROKER_URL,
-    backend=CELERY_BROKER_BACKEND,
+    broker=settings.celery_broker_url,
+    backend=settings.celery_result_backend,
     include=[
         "backend.tasks.shortlinks",
     ],

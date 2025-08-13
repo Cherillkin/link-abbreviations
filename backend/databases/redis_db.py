@@ -1,12 +1,12 @@
 import redis
 import json
 from typing import Optional, Any, cast
-from backend.config.config import REDIS_HOST, REDIS_PORT, REDIS_DB
+from backend.config.config import settings
 
 redis_client = redis.Redis(
-    host=cast(str, REDIS_HOST),
-    port=cast(int, REDIS_PORT),
-    db=cast(int, REDIS_DB),
+    host=settings.redis_host,
+    port=settings.redis_port,
+    db=settings.redis_db,
     decode_responses=True,
 )
 

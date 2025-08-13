@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 
 from backend.databases.postgres import get_db
@@ -15,7 +15,7 @@ def get_user_service() -> UserService:
 
 @router.get(
     "/{client_id}",
-    responses={400: {"description": "Bad Request"}},
+    responses={status.HTTP_400_BAD_REQUEST: {"description": "Bad Request"}},
     response_model=UserBase,
     description="Получение пользователя",
 )

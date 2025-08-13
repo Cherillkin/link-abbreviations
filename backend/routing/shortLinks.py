@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Request, HTTPException
+from fastapi import APIRouter, Depends, Request, status
 from sqlalchemy.orm import Session
 from starlette.responses import RedirectResponse
 from typing import List, Union
@@ -25,7 +25,7 @@ def get_short_link_service() -> ShortLinkService:
 
 @router.post(
     "/",
-    responses={400: {"description": "Bad Request"}},
+    responses={status.HTTP_400_BAD_REQUEST: {"description": "Bad Request"}},
     response_model=ShortLinkInfo,
     description="Создание ссылки",
 )
@@ -47,7 +47,7 @@ async def create_short_link(
 
 @router.get(
     "/{code}",
-    responses={400: {"description": "Bad Request"}},
+    responses={status.HTTP_400_BAD_REQUEST: {"description": "Bad Request"}},
     response_model=ShortLinkInfoWithClick,
     description="Просмотр информации о ссылке",
 )
@@ -61,7 +61,7 @@ def get_link_info(
 
 @router.get(
     "/",
-    responses={400: {"description": "Bad Request"}},
+    responses={status.HTTP_400_BAD_REQUEST: {"description": "Bad Request"}},
     response_model=List[ShortLinkInfo],
     description="Получение всех коротких кодов",
 )
@@ -74,7 +74,7 @@ def get_links_code(
 
 @router.get(
     "/r/{code}",
-    responses={400: {"description": "Bad Request"}},
+    responses={status.HTTP_400_BAD_REQUEST: {"description": "Bad Request"}},
     description="Перенаправление пользователя по новой ссылке",
 )
 def redirect_to_original(
@@ -89,7 +89,7 @@ def redirect_to_original(
 
 @router.post(
     "/verify-password",
-    responses={400: {"description": "Bad Request"}},
+    responses={status.HTTP_400_BAD_REQUEST: {"description": "Bad Request"}},
     description="Проверка пароля",
 )
 def verify_password(
@@ -112,7 +112,7 @@ def verify_password(
 
 @router.post(
     "/{code}/qr",
-    responses={400: {"description": "Bad Request"}},
+    responses={status.HTTP_400_BAD_REQUEST: {"description": "Bad Request"}},
     description="Создания QR-кода",
 )
 def generate_qr_for_link(
@@ -122,8 +122,6 @@ def generate_qr_for_link(
     service: ShortLinkService = Depends(get_short_link_service),
 ) -> dict:
     link = service.get_info(db, code)
-    if not link:
-        raise HTTPException(status_code=404, detail="Link not found")
 
     short_url = f"{request.base_url}short-links/r/{link.short_code}"
     task = generate_qr_code_task.delay(short_url)

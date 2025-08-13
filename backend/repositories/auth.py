@@ -33,7 +33,8 @@ class AuthRepository:
         except Exception as e:
             db.rollback()
             raise HTTPException(
-                status_code=500, detail=f"Error to register user: {str(e)}"
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Error to register user: {str(e)}",
             )
 
         return user
@@ -41,9 +42,14 @@ class AuthRepository:
     def login_user(self, user_data: LoginUser, db: Session) -> User:
         user = db.query(User).filter(User.email == user_data.email).first()
         if not user:
-            raise HTTPException(status_code=404, detail="User not found")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+            )
 
         if not verify_password(user_data.password, user.password):
-            raise HTTPException(status_code=401, detail="Email or Password incorrect")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Email or Password incorrect",
+            )
 
         return user

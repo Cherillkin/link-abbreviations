@@ -2,7 +2,7 @@ from datetime import datetime
 
 from sqlalchemy.orm import Session
 
-from backend.config.config import JWT_SECRET, ALGORITHM
+from backend.config.config import settings
 from backend.databases.redis_db import save_user_to_redis, redis_client
 from backend.repositories.auth import AuthRepository
 from backend.schemas.auth import RegisterUser, LoginUser, TokenResponse
@@ -45,7 +45,9 @@ class AuthService:
 
     def logout_user(self, token: str) -> None:
         try:
-            payload = jwt.decode(token, JWT_SECRET, algorithms=[ALGORITHM])
+            payload = jwt.decode(
+                token, settings.jwt_secret, algorithms=[settings.algorithm]
+            )
             exp = payload.get("exp")
             now = datetime.utcnow().timestamp()
             ttl = int(exp - now) if exp else 0

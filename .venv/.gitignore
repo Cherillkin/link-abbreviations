@@ -1,26 +1,21 @@
-# Environment
 .env
 .venv/
 venv/
 
-# IDE configs
 .idea/
 .vscode/
 
-# Python cache
 __pycache__/
 *.py[cod]
 
-# Database
 test.db
 *.sqlite3
 
-# Alembic
 alembic.ini
 migrations/
 
-# Celery
+client/
+
 backend/celerybeat-schedule
 
-# Pre-commit config
 .pre-commit-config.yaml

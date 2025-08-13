@@ -1,9 +1,9 @@
-from fastapi import APIRouter, Depends, Request, Response
+from fastapi import APIRouter, Depends, Request, Response, status
 
 from sqlalchemy.orm import Session
 
 from typing import Dict
-from backend.config.config import ACCESS_TOKEN_EXPIRE_MINUTES
+from backend.config.config import settings
 from backend.services.auth import AuthService
 from backend.databases.postgres import get_db
 from backend.schemas.auth import RegisterUser, LoginUser, TokenResponse
@@ -17,7 +17,7 @@ def get_auth_service() -> AuthService:
 
 @router.post(
     "/sign-up",
-    responses={400: {"description": "Bad request"}},
+    responses={status.HTTP_400_BAD_REQUEST: {"description": "Bad request"}},
     response_model=TokenResponse,
     description="Регистрация пользователя",
 )
@@ -31,7 +31,7 @@ def sign_up(
 
 @router.post(
     "/sign-in",
-    responses={400: {"description": "Bad request"}},
+    responses={status.HTTP_400_BAD_REQUEST: {"description": "Bad request"}},
     response_model=TokenResponse,
     description="Авторизация пользователя",
 )
@@ -49,7 +49,7 @@ def sign_in(
         httponly=True,
         secure=False,
         samesite="lax",
-        max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+        max_age=settings.access_token_expire_minutes * 60,
         path="/",
     )
 
@@ -57,7 +57,9 @@ def sign_in(
 
 
 @router.post(
-    "/logout", responses={400: {"description": "Bad request"}}, description="Выход"
+    "/logout",
+    responses={status.HTTP_400_BAD_REQUEST: {"description": "Bad request"}},
+    description="Выход",
 )
 def logout(
     request: Request,

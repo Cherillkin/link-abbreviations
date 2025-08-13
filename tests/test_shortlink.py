@@ -9,7 +9,7 @@ from pytest_mock import MockerFixture
 
 from backend.cmd.main import app
 from backend.models import User, ShortLink
-from backend.schemas.shortLink import ShortLinkInfo
+from backend.schemas.shortLink import ShortLinkInfo, ShortLinkInfoWithClick
 from backend.services.shortLinks import ShortLinkService
 
 
@@ -76,11 +76,12 @@ def test_create_short_link(
 def test_get_link_info(
     client: TestClient, override_dependencies: MagicMock, fake_short_link: ShortLink
 ) -> None:
-    override_dependencies.get_info.return_value = ShortLinkInfo(
+    override_dependencies.get_info.return_value = ShortLinkInfoWithClick(
         short_code=fake_short_link.short_code,
         original_url=fake_short_link.original_url,
         created_at=fake_short_link.created_at,
         expires_at=fake_short_link.expires_at,
+        click_count=0,
     )
     response = client.get(f"/short-links/{fake_short_link.short_code}")
     assert response.status_code == status.HTTP_200_OK

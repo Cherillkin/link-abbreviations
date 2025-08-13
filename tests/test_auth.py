@@ -4,10 +4,10 @@ import pytest
 from starlette.testclient import TestClient
 from fastapi import HTTPException, status
 from jose import jwt
-from typing import Generator, Optional
+from typing import Generator
 
 from backend.cmd.main import app
-from backend.config.config import JWT_SECRET, ALGORITHM
+from backend.config.config import settings
 from backend.routing.auth import get_auth_service
 from backend.schemas.auth import TokenResponse
 
@@ -93,7 +93,7 @@ def create_test_token() -> str:
         "sub": "test@example.com",
         "exp": datetime.utcnow() + timedelta(minutes=5),
     }
-    return jwt.encode(payload, JWT_SECRET, algorithm=ALGORITHM)
+    return jwt.encode(payload, settings.jwt_secret, algorithm=settings.algorithm)
 
 
 @pytest.fixture

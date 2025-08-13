@@ -1,14 +1,14 @@
 from typing import Generator
 
 import pytest
-from fastapi.testclient import TestClient
+from fastapi import status
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from fastapi import status
+from fastapi.testclient import TestClient
 
 from backend.cmd.main import app
-from backend.databases.postgres import Base, get_db
 from backend.models.auth import User
+from backend.databases.postgres import Base, get_db
 
 SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"
 engine = create_engine(
@@ -27,7 +27,6 @@ def override_get_db() -> Generator:
 
 app.dependency_overrides[get_db] = override_get_db
 
-# Создаём таблицы
 Base.metadata.create_all(bind=engine)
 
 client = TestClient(app)
