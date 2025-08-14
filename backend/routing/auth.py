@@ -21,12 +21,12 @@ def get_auth_service() -> AuthService:
     response_model=TokenResponse,
     description="Регистрация пользователя",
 )
-def sign_up(
+async def sign_up(
     user: RegisterUser,
     db: Session = Depends(get_db),
     auth_service: AuthService = Depends(get_auth_service),
 ) -> TokenResponse:
-    return auth_service.register_user(user, db)
+    return await auth_service.register_user(user, db)
 
 
 @router.post(
@@ -35,13 +35,13 @@ def sign_up(
     response_model=TokenResponse,
     description="Авторизация пользователя",
 )
-def sign_in(
+async def sign_in(
     user: LoginUser,
     db: Session = Depends(get_db),
     response: Response = None,
     auth_service: AuthService = Depends(get_auth_service),
 ) -> TokenResponse:
-    token = auth_service.login_user(user, db)
+    token = await auth_service.login_user(user, db)
 
     response.set_cookie(
         key="access_token",
@@ -61,7 +61,7 @@ def sign_in(
     responses={status.HTTP_400_BAD_REQUEST: {"description": "Bad request"}},
     description="Выход",
 )
-def logout(
+async def logout(
     request: Request,
     response: Response,
     auth_service: AuthService = Depends(get_auth_service),
@@ -70,7 +70,6 @@ def logout(
     if not token:
         return {"message": "No token found"}
 
-    auth_service.logout_user(token)
-
+    await auth_service.logout_user(token)
     response.delete_cookie("access_token")
     return {"message": "Logged out successfully"}

@@ -1,4 +1,5 @@
 from datetime import datetime
+import secrets
 
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
@@ -25,11 +26,9 @@ class AuthRepository:
                 id_role=2,
                 created_at=datetime.utcnow(),
             )
-
             db.add(user)
             db.commit()
             db.refresh(user)
-
         except Exception as e:
             db.rollback()
             raise HTTPException(
@@ -52,4 +51,21 @@ class AuthRepository:
                 detail="Email or Password incorrect",
             )
 
+        return user
+
+    def get_or_create_oauth_user(self, email: str, db: Session) -> User:
+        user = db.query(User).filter(User.email == email).first()
+        if user:
+            return user
+
+        dummy_password = secrets.token_urlsafe(32)
+        user = User(
+            email=email,
+            password=dummy_password,
+            id_role=2,
+            created_at=datetime.utcnow(),
+        )
+        db.add(user)
+        db.commit()
+        db.refresh(user)
         return user

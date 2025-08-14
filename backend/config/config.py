@@ -16,6 +16,7 @@ class Settings(BaseSettings):
         "redis://localhost:6379/0", validation_alias="CELERY_RESULT_BACKEND"
     )
 
+    secret_key: str = Field("89U2NOjW-I", validation_alias="SECRET_KEY")
     jwt_secret: str = Field("9VHleSjX-C", validation_alias="JWT_SECRET")
     algorithm: str = Field("HS256", validation_alias="ALGORITHM")
     access_token_expire_minutes: int = Field(
@@ -37,6 +38,12 @@ class Settings(BaseSettings):
     postgres_user: Optional[str] = Field(None, validation_alias="POSTGRES_USER")
     postgres_password: Optional[str] = Field(None, validation_alias="POSTGRES_PASSWORD")
     postgres_db: Optional[str] = Field(None, validation_alias="POSTGRES_DB")
+
+    google_client_id: str = Field(None, validation_alias="GOOGLE_CLIENT_ID")
+    google_client_secret: str = Field(None, validation_alias="GOOGLE_CLIENT_SECRET")
+
+    yandex_client_id: str = Field(None, validation_alias="YANDEX_CLIENT_ID")
+    yandex_client_secret: str = Field(None, validation_alias="YANDEX_CLIENT_SECRET")
 
     model_config = SettingsConfigDict(
         env_file=".env", env_file_encoding="utf-8", extra="ignore"
