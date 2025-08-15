@@ -14,18 +14,18 @@ class AuthService:
         self.repository = repository
 
     async def register_user(
-        self, user_data: RegisterUser, db: Session
+        self, user_data: RegisterUser, db: Session, id_role: int = 2
     ) -> TokenResponse:
-        user = self.repository.register_user(user_data, db)
+        user = self.repository.register_user(user_data, db, id_role=id_role)
         token = create_access_token(data={"sub": str(user.id_user)})
         save_user_to_redis(user.id_user, {"id": user.id_user, "email": user.email})
-        return TokenResponse(access_token=token)
+        return TokenResponse(access_token=token, id_role=user.id_role)
 
     async def login_user(self, user_data: LoginUser, db: Session) -> TokenResponse:
         user = self.repository.login_user(user_data, db)
         token = create_access_token(data={"sub": str(user.id_user)})
         save_user_to_redis(user.id_user, {"id": user.id_user, "email": user.email})
-        return TokenResponse(access_token=token)
+        return TokenResponse(access_token=token, id_role=user.id_role)
 
     async def logout_user(self, token: str) -> None:
         try:
@@ -47,4 +47,4 @@ class AuthService:
 
         save_user_to_redis(user.id_user, {"id": user.id_user, "email": user.email})
 
-        return TokenResponse(access_token=token)
+        return TokenResponse(access_token=token, id_role=user.id_role)

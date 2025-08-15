@@ -8,7 +8,7 @@ from backend.config.config import settings
 from datetime import timedelta, datetime
 from backend.models.auth import User
 
-from fastapi import HTTPException, status
+from fastapi import HTTPException, status, Request
 from jose import jwt, JWTError
 import bcrypt
 import re
@@ -66,29 +66,29 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
     return encoded_jwt
 
 
-security = HTTPBearer()
+security = HTTPBearer(auto_error=False)
 
 
 def get_current_user(
+    request: Request,
     credentials: HTTPAuthorizationCredentials = Depends(security),
     db: Session = Depends(get_db),
 ) -> User:
-    token = credentials.credentials
+    token = (
+        credentials.credentials if credentials else request.cookies.get("access_token")
+    )
+    if not token:
+        raise HTTPException(status_code=401, detail="Not authenticated")
 
     try:
         payload = jwt.decode(
             token, settings.jwt_secret, algorithms=[settings.algorithm]
         )
-        user_id: int = int(payload.get("sub"))
+        user_id = int(payload.get("sub"))
     except (JWTError, ValueError, TypeError):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token"
-        )
+        raise HTTPException(status_code=401, detail="Invalid token")
 
     user = db.query(User).filter(User.id_user == user_id).first()
     if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
-        )
-
+        raise HTTPException(status_code=404, detail="User not found")
     return user

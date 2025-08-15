@@ -15,6 +15,7 @@ from backend.services.shortLinks import ShortLinkService
 from backend.tasks.shortlinks import generate_qr_code_task
 from backend.utils.auth import get_current_user
 from backend.models.auth import User
+from backend.utils.shortlink import generate_qr_code
 
 router = APIRouter(prefix="/short-links", tags=["ShortLinks"])
 
@@ -87,6 +88,18 @@ def redirect_to_original(
     return RedirectResponse(url=url)
 
 
+@router.get(
+    "/stats/top-links",
+    responses={status.HTTP_400_BAD_REQUEST: {"description": "Bad Request"}},
+    description="Статистика ссылок",
+)
+def get_top_links_stats(
+    db: Session = Depends(get_db),
+    service: ShortLinkService = Depends(get_short_link_service),
+) -> List:
+    return service.get_top_links_stats(db)
+
+
 @router.post(
     "/verify-password",
     responses={status.HTTP_400_BAD_REQUEST: {"description": "Bad Request"}},
@@ -113,7 +126,7 @@ def verify_password(
 @router.post(
     "/{code}/qr",
     responses={status.HTTP_400_BAD_REQUEST: {"description": "Bad Request"}},
-    description="Создания QR-кода",
+    description="Создание QR-кода",
 )
 def generate_qr_for_link(
     code: str,
@@ -124,6 +137,6 @@ def generate_qr_for_link(
     link = service.get_info(db, code)
 
     short_url = f"{request.base_url}short-links/r/{link.short_code}"
-    task = generate_qr_code_task.delay(short_url)
+    qr_base64 = generate_qr_code(short_url)
 
-    return {"task_id": task.id, "status": "processing"}
+    return {"qr_code": f"data:image/png;base64,{qr_base64}"}

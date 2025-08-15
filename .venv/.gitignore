@@ -9,7 +9,6 @@ __pycache__/
 *.py[cod]
 
 test.db
-*.sqlite3
 
 alembic.ini
 migrations/

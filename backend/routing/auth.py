@@ -2,17 +2,38 @@ from fastapi import APIRouter, Depends, Request, Response, status
 
 from sqlalchemy.orm import Session
 
-from typing import Dict
+from typing import Dict, Union
+from backend.models.auth import User
 from backend.config.config import settings
+from backend.repositories.auth import AuthRepository
 from backend.services.auth import AuthService
 from backend.databases.postgres import get_db
 from backend.schemas.auth import RegisterUser, LoginUser, TokenResponse
+from backend.utils.auth import get_current_user
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
 
-def get_auth_service() -> AuthService:
-    raise RuntimeError("AuthService dependency not provided")
+def get_auth_service(db: Session = Depends(get_db)) -> AuthService:
+    repository = AuthRepository()
+    return AuthService(repository)
+
+
+@router.post(
+    "/create",
+    responses={status.HTTP_400_BAD_REQUEST: {"description": "Bad request"}},
+    response_model=TokenResponse,
+    description="Создание администратора",
+)
+async def create_admin(
+    user_data: RegisterUser,
+    db: Session = Depends(get_db),
+    auth_service: AuthService = Depends(get_auth_service),
+    current_user: User = Depends(get_current_user),
+) -> Union[TokenResponse, dict]:
+    if current_user.id_role != 1:
+        return {"error": "Недостаточно прав"}
+    return await auth_service.register_user(user_data, db, id_role=1)
 
 
 @router.post(
@@ -31,14 +52,13 @@ async def sign_up(
 
 @router.post(
     "/sign-in",
-    responses={status.HTTP_400_BAD_REQUEST: {"description": "Bad request"}},
     response_model=TokenResponse,
     description="Авторизация пользователя",
 )
 async def sign_in(
     user: LoginUser,
+    response: Response,
     db: Session = Depends(get_db),
-    response: Response = None,
     auth_service: AuthService = Depends(get_auth_service),
 ) -> TokenResponse:
     token = await auth_service.login_user(user, db)

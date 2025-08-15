@@ -9,6 +9,7 @@ oauth.register(
     client_secret=settings.google_client_secret,
     server_metadata_url="https://accounts.google.com/.well-known/openid-configuration",
     client_kwargs={"scope": "openid email profile"},
+    redirect_uri=f"{settings.backend_url}/oauth/callback/google",
 )
 
 oauth.register(
@@ -19,4 +20,5 @@ oauth.register(
     authorize_url="https://oauth.yandex.com/authorize",
     api_base_url="https://login.yandex.ru/info",
     client_kwargs={"scope": "login:email"},
+    redirect_uri=f"{settings.backend_url}/oauth/callback/yandex",
 )

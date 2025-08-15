@@ -2,7 +2,7 @@ from datetime import datetime
 
 from fastapi import HTTPException, Request, status
 from sqlalchemy.orm import Session
-from typing import List, Union
+from typing import List, Union, Dict
 
 from backend.config.config import settings
 from backend.databases.redis_db import redis_client
@@ -116,6 +116,12 @@ class ShortLinkService:
         )
 
         return link.original_url
+
+    def get_top_links_stats(self, db: Session, limit: int = 5) -> List[Dict]:
+        results = self.repository.get_top_links_last_7_days(db, limit)
+        return [
+            {"short_code": r[0], "original_url": r[1], "clicks": r[2]} for r in results
+        ]
 
     def verify_password_short_link(
         self, db: Session, code: str, password: str

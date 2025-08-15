@@ -10,7 +10,9 @@ from backend.utils.auth import hash_password, verify_password
 
 
 class AuthRepository:
-    def register_user(self, user_data: RegisterUser, db: Session) -> User:
+    def register_user(
+        self, user_data: RegisterUser, db: Session, id_role: int = 2
+    ) -> User:
         existing_user = db.query(User).filter(User.email == user_data.email).first()
         if existing_user:
             raise HTTPException(
@@ -23,7 +25,7 @@ class AuthRepository:
             user = User(
                 email=user_data.email,
                 password=hashed_password,
-                id_role=2,
+                id_role=id_role,
                 created_at=datetime.utcnow(),
             )
             db.add(user)
@@ -61,7 +63,7 @@ class AuthRepository:
         dummy_password = secrets.token_urlsafe(32)
         user = User(
             email=email,
-            password=dummy_password,
+            password=hash_password(dummy_password),
             id_role=2,
             created_at=datetime.utcnow(),
         )
