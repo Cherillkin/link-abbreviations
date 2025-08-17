@@ -1,6 +1,7 @@
 import { useState, useContext, useEffect } from "react";
 import { AuthContext } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
+import OAuthSuccess from "../components/OAuthSuccess";
 
 export default function SignIn() {
   const { login, isAuthenticated, user } = useContext(AuthContext);
@@ -64,6 +65,8 @@ export default function SignIn() {
         >
           Войти
         </button>
+
+        <OAuthSuccess />
       </form>
 
       {message && (

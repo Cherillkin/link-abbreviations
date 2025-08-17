@@ -17,7 +17,7 @@ export default function SignUp() {
     e.preventDefault();
     try {
       const response = await axios.post(
-        "http://127.0.0.1:8000/auth/sign-in",
+        "http://localhost:8000/auth/sign-in",
         form
       );
       const { access_token, id_role } = response.data;
@@ -68,9 +68,9 @@ export default function SignUp() {
         >
           Зарегистрироваться
         </button>
-      </form>
 
-      <OAuthSuccess baseUrl="http://127.0.0.1:8000" />
+        <OAuthSuccess />
+      </form>
 
       {message && (
         <p className="mt-4 text-center text-sm text-red-600">{message}</p>

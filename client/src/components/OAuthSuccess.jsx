@@ -5,7 +5,7 @@ import { FcGoogle } from "react-icons/fc";
 import { FaYandex } from "react-icons/fa";
 import Cookies from "js-cookie";
 
-export default function OAuthSuccess({ baseUrl = "http://127.0.0.1:8000" }) {
+export default function OAuthSuccess({ baseUrl = "http://localhost:8000" }) {
   const { login } = useContext(AuthContext);
   const navigate = useNavigate();
 
