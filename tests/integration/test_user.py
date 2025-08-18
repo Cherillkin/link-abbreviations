@@ -1,6 +1,7 @@
 from typing import Generator
 
 import pytest
+import uuid
 from fastapi import status
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -35,12 +36,13 @@ client = TestClient(app)
 @pytest.fixture
 def test_user() -> Generator[User, None, None]:
     db = TestingSessionLocal()
-    user = User(email="test@example.com", password="hashedpass", id_role=1)
+    unique_email = f"test_{uuid.uuid4()}@example.com"
+    user = User(email=unique_email, password="hashedpass", id_role=1)
     db.add(user)
     db.commit()
     db.refresh(user)
     yield user
-    db.query(User).delete()
+    db.query(User).filter_by(id_user=user.id_user).delete()
     db.commit()
 
 
@@ -48,7 +50,7 @@ def test_get_existing_user(test_user: User) -> None:
     response = client.get(f"/user/{test_user.id_user}")
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
-    assert data["email"] == "test@example.com"
+    assert data["email"] == test_user.email
 
 
 def test_get_non_existing_user() -> None:

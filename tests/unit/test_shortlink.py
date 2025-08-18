@@ -139,14 +139,19 @@ def test_generate_qr_for_link(
     mocker: MockerFixture,
 ) -> None:
     override_dependencies.get_info.return_value = fake_short_link
-    fake_task = MagicMock()
-    fake_task.id = "task-123"
 
-    mocker.patch(
-        "backend.routing.shortLinks.generate_qr_code_task.delay", return_value=fake_task
+    mocked_generate = mocker.patch(
+        "backend.routing.shortLinks.generate_qr_code", return_value="fake_base64"
     )
 
     response = client.post(f"/short-links/{fake_short_link.short_code}/qr")
+
     assert response.status_code == status.HTTP_200_OK
-    assert response.json()["status"] == "processing"
-    assert response.json()["task_id"] == "task-123"
+    data = response.json()
+    assert "qr_code" in data
+    assert data["qr_code"] == "data:image/png;base64,fake_base64"
+
+    mocked_generate.assert_called_once_with(
+        f"http://testserver/short-links/r/{fake_short_link.short_code}"
+    )
+

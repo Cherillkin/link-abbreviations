@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, AsyncMock
 import pytest
 from starlette.testclient import TestClient
 from fastapi import HTTPException, status
@@ -13,8 +13,8 @@ from backend.schemas.auth import TokenResponse
 
 
 @pytest.fixture
-def mock_auth_service() -> MagicMock:
-    return MagicMock()
+def mock_auth_service() -> AsyncMock:
+    return AsyncMock()
 
 
 @pytest.fixture
@@ -28,10 +28,10 @@ client = TestClient(app)
 
 
 def test_signup_success(
-    mock_auth_service: MagicMock, override_dependencies: None
+    mock_auth_service: AsyncMock, override_dependencies: None
 ) -> None:
     user_data = {"email": "test@example.com", "password": "password123"}
-    token_response = {"access_token": "fake_token", "token_type": "bearer"}
+    token_response = {"access_token": "fake_token", "token_type": "bearer", "id_role": 1}
 
     mock_auth_service.register_user.return_value = token_response
 
@@ -61,7 +61,7 @@ def test_signin_success(
     mock_auth_service: MagicMock, override_dependencies: None
 ) -> None:
     user_data = {"email": "test@example.com", "password": "password123"}
-    token_response = TokenResponse(access_token="fake_token", token_type="bearer")
+    token_response = TokenResponse(access_token="fake_token", token_type="bearer", id_role=1)
 
     mock_auth_service.login_user.return_value = token_response
 
@@ -106,7 +106,7 @@ def test_logout_success(
 ) -> None:
     token = create_test_token()
 
-    mock_auth_service.logout_user.return_value = None
+    mock_auth_service.logout_user = AsyncMock(return_value=None)
 
     client_with_deps.cookies.set("access_token", token)
     response = client_with_deps.post("/auth/logout")
