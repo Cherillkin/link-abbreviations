@@ -15,38 +15,82 @@ export function AuthProvider({ children }) {
       .find((row) => row.startsWith("access_token="))
       ?.split("=")[1];
 
-    if (token) {
-      const decoded = jwt_decode.default(token);
-      setUser({ email: decoded.email, id_role: decoded.id_role });
-      setIsAuthenticated(true);
+    const id_role = document.cookie
+      .split("; ")
+      .find((row) => row.startsWith("id_role="))
+      ?.split("=")[1];
+
+    if (token && id_role) {
+      try {
+        const decoded = jwt_decode.default(token);
+        setUser({ email: decoded.email, id_role: parseInt(id_role, 10) });
+        setIsAuthenticated(true);
+      } catch (err) {
+        console.log("Invalid token:", err);
+        logout();
+      }
     }
+
     setLoading(false);
   }, []);
 
-  const login = async (email, password) => {
+  // Обычный логин (email + пароль)
+  const loginWithPassword = async (email, password) => {
     const res = await axios.post(
       "http://localhost:8000/auth/sign-in",
       { email, password },
       { withCredentials: true }
     );
 
+    const { access_token, id_role } = res.data;
+
+    // Сохраняем в state и cookie
     setIsAuthenticated(true);
-    setUser({ email, id_role: res.data.id_role });
+    setUser({ email, id_role });
+    document.cookie = `access_token=${access_token}; path=/; max-age=${
+      3600 * 24 * 7
+    }`;
+    document.cookie = `id_role=${id_role}; path=/; max-age=${3600 * 24 * 7}`;
   };
 
+  // OAuth login
+  const loginWithOAuth = (token, id_role, email) => {
+    setIsAuthenticated(true);
+    setUser({ email, id_role });
+    document.cookie = `access_token=${token}; path=/; max-age=${3600 * 24 * 7}`;
+    document.cookie = `id_role=${id_role}; path=/; max-age=${3600 * 24 * 7}`;
+  };
+
+  // Logout
   const logout = async () => {
-    await axios.post(
-      "http://localhost:8000/auth/logout",
-      {},
-      { withCredentials: true }
-    );
+    try {
+      await axios.post(
+        "http://localhost:8000/auth/logout",
+        {},
+        { withCredentials: true }
+      );
+    } catch (err) {
+      console.log("Logout error:", err);
+    }
+
+    // Удаляем cookie
+    document.cookie = "access_token=; path=/; max-age=0";
+    document.cookie = "id_role=; path=/; max-age=0";
+
     setIsAuthenticated(false);
     setUser(null);
   };
 
   return (
     <AuthContext.Provider
-      value={{ isAuthenticated, user, login, logout, loading }}
+      value={{
+        isAuthenticated,
+        user,
+        loading,
+        loginWithPassword,
+        loginWithOAuth,
+        logout,
+      }}
     >
       {children}
     </AuthContext.Provider>

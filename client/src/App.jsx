@@ -14,6 +14,7 @@ import SignIn from "./pages/SignIn";
 import AdminDashboard from "./components/AdminDashboard";
 import { AuthContext, AuthProvider } from "./context/AuthContext";
 import OAuthSuccess from "./components/OAuthSuccess";
+import OAuthCallback from "./utils/OAuthCallback";
 
 function AppContent() {
   const { isAuthenticated, loading, user } = useContext(AuthContext);
@@ -33,14 +34,18 @@ function AppContent() {
         <Routes>
           <Route
             path="/sign-up"
-            element={isAuthenticated ? <Navigate to="/" replace /> : <SignUp />}
+            element={
+              isAuthenticated ? <Navigate to="/home" replace /> : <SignUp />
+            }
           />
           <Route
             path="/sign-in"
-            element={isAuthenticated ? <Navigate to="/" replace /> : <SignIn />}
+            element={
+              isAuthenticated ? <Navigate to="/home" replace /> : <SignIn />
+            }
           />
           <Route
-            path="/"
+            path="/home"
             element={
               isAuthenticated ? <Home /> : <Navigate to="/sign-in" replace />
             }
@@ -51,7 +56,7 @@ function AppContent() {
               isAuthenticated && user?.id_role === 1 ? (
                 <AdminDashboard />
               ) : (
-                <Navigate to="/" replace />
+                <Navigate to="/home" replace />
               )
             }
           />
@@ -59,14 +64,14 @@ function AppContent() {
             path="*"
             element={
               <div>
-                Страница не найдена. Перейдите на <Link to="/">главную</Link>
+                Страница не найдена. Перейдите на{" "}
+                <Link to="/home" className="text-2xl">
+                  главную
+                </Link>
               </div>
             }
           />
-          <Route
-            path="/oauth-success"
-            element={<OAuthSuccess baseUrl="http://127.0.0.1:8000" />}
-          />
+          <Route path="/oauth-callback" element={<OAuthCallback />} />
         </Routes>
       </div>
     </>

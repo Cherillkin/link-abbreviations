@@ -22,7 +22,7 @@ export default function Navbar() {
   return (
     <nav className="bg-gray-800 text-white flex justify-between items-center p-4">
       <div className="flex items-center space-x-4">
-        <Link to="/" className="text-xl font-bold">
+        <Link to="/home" className="text-xl font-bold">
           ShortLink
         </Link>
         {user?.id_role === 1 && (

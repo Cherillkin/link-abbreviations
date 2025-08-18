@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import OAuthSuccess from "../components/OAuthSuccess";
 
 export default function SignIn() {
-  const { login, isAuthenticated, user } = useContext(AuthContext);
+  const { loginWithPassword, isAuthenticated, user } = useContext(AuthContext);
   const [form, setForm] = useState({ email: "", password: "" });
   const [message, setMessage] = useState("");
   const navigate = useNavigate();
@@ -17,7 +17,7 @@ export default function SignIn() {
     setMessage("");
 
     try {
-      await login(form.email, form.password);
+      await loginWithPassword(form.email, form.password);
       setMessage("Вход успешен!");
     } catch (err) {
       setMessage(
@@ -28,11 +28,7 @@ export default function SignIn() {
 
   useEffect(() => {
     if (isAuthenticated && user) {
-      if (user.id_role === 1) {
-        navigate("/admin");
-      } else {
-        navigate("/");
-      }
+      navigate(user.id_role === 1 ? "/admin" : "/home", { replace: true });
     }
   }, [isAuthenticated, user, navigate]);
 
@@ -65,9 +61,9 @@ export default function SignIn() {
         >
           Войти
         </button>
-
-        <OAuthSuccess />
       </form>
+
+      <OAuthSuccess />
 
       {message && (
         <p className="mt-4 text-center text-sm text-red-600">{message}</p>
