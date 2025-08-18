@@ -62,5 +62,6 @@ async def oauth_callback(
         max_age=3600 * 24 * 7,
     )
 
-    frontend_redirect = f"{settings.frontend_url}/"
+    frontend_redirect = f"{settings.frontend_url}/oauth-callback?access_token={jwt_token.access_token}&id_role={jwt_token.id_role}"
+
     return RedirectResponse(url=frontend_redirect, status_code=302)

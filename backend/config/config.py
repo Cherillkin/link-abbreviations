@@ -39,14 +39,14 @@ class Settings(BaseSettings):
     postgres_password: Optional[str] = Field(None, validation_alias="POSTGRES_PASSWORD")
     postgres_db: Optional[str] = Field(None, validation_alias="POSTGRES_DB")
 
-    google_client_id: str = Field(None, validation_alias="GOOGLE_CLIENT_ID")
-    google_client_secret: str = Field(None, validation_alias="GOOGLE_CLIENT_SECRET")
+    google_client_id: Optional[str] = Field(None, validation_alias="GOOGLE_CLIENT_ID")
+    google_client_secret: Optional[str] = Field(None, validation_alias="GOOGLE_CLIENT_SECRET")
 
-    yandex_client_id: str = Field(None, validation_alias="YANDEX_CLIENT_ID")
-    yandex_client_secret: str = Field(None, validation_alias="YANDEX_CLIENT_SECRET")
+    yandex_client_id: Optional[str] = Field(None, validation_alias="YANDEX_CLIENT_ID")
+    yandex_client_secret: Optional[str] = Field(None, validation_alias="YANDEX_CLIENT_SECRET")
 
     frontend_url: str = Field("http://localhost:5173", validation_alias="FRONTEND_URL")
-    backend_url: str = Field("http://127.0.0.1:8000", validation_alias="BACKEND_URL")
+    backend_url: str = Field("http://localhost:8000", validation_alias="BACKEND_URL")
 
     model_config = SettingsConfigDict(
         env_file=".env", env_file_encoding="utf-8", extra="ignore"
