@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Request, Depends, Response
+from fastapi import APIRouter, Request, Depends, Response, status
 from fastapi.responses import RedirectResponse
 
 from backend.config.config import settings
@@ -64,4 +64,4 @@ async def oauth_callback(
 
     frontend_redirect = f"{settings.frontend_url}/oauth-callback?access_token={jwt_token.access_token}&id_role={jwt_token.id_role}"
 
-    return RedirectResponse(url=frontend_redirect, status_code=302)
+    return RedirectResponse(url=frontend_redirect, status_code=status.HTTP_302_FOUND)

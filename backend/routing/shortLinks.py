@@ -12,7 +12,6 @@ from backend.schemas.shortLink import (
     ShortLinkInfoWithClick,
 )
 from backend.services.shortLinks import ShortLinkService
-from backend.tasks.shortlinks import generate_qr_code_task
 from backend.utils.auth import get_current_user
 from backend.models.auth import User
 from backend.utils.shortlink import generate_qr_code
