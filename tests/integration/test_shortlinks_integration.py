@@ -2,6 +2,7 @@
 from typing import Generator, Iterator
 
 import pytest
+from fastapi import status
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy import create_engine
@@ -49,13 +50,13 @@ def client_with_user() -> Iterator[TestClient]:
 def test_create_and_get_short_link(client_with_user: TestClient) -> None:
     payload = {"original_url": "https://example.com"}
     response = client_with_user.post("/short-links/", json=payload)
-    assert response.status_code == 200
+    assert response.status_code == status.HTTP_200_OK
     data = response.json()
     short_code = data["short_code"]
     assert short_code
 
     response = client_with_user.get(f"/short-links/{short_code}")
-    assert response.status_code == 200
+    assert response.status_code == status.HTTP_200_OK
     info = response.json()
     assert info["short_code"] == short_code
     assert info["original_url"].rstrip("/") == payload["original_url"].rstrip("/")
@@ -76,7 +77,7 @@ def test_get_all_short_links(client_with_user: TestClient) -> None:
     client_with_user.post("/short-links/", json=payload)
 
     response = client_with_user.get("/short-links/")
-    assert response.status_code == 200
+    assert response.status_code == status.HTTP_200_OK
     data = response.json()
     assert isinstance(data, list)
     assert any(link["original_url"].rstrip("/") == payload["original_url"].rstrip("/") for link in data)

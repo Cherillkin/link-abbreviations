@@ -48,7 +48,7 @@ def test_signup_user_exists(
     user_data = {"email": "exists@example.com", "password": "password123"}
 
     mock_auth_service.register_user.side_effect = HTTPException(
-        status_code=400, detail="User already exists"
+        status_code=status.HTTP_400_BAD_REQUEST, detail="User already exists"
     )
 
     response = client.post("/auth/sign-up", json=user_data)
@@ -79,7 +79,7 @@ def test_signin_fail_wrong_credentials(
     user_data = {"email": "wrong@example.com", "password": "wrongpass"}
 
     mock_auth_service.login_user.side_effect = HTTPException(
-        status_code=401, detail="Email or Password incorrect"
+        status_code=status.HTTP_401_UNAUTHORIZED, detail="Email or Password incorrect"
     )
 
     response = client.post("/auth/sign-in", json=user_data)
