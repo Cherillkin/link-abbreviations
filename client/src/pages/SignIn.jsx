@@ -1,10 +1,12 @@
 import { useState, useContext, useEffect } from "react";
-import { AuthContext } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { AuthContext } from "../context/AuthContext";
+import { signIn } from "../api/auth";
 import OAuthSuccess from "../components/OAuthSuccess";
 
 export default function SignIn() {
   const { loginWithPassword, isAuthenticated, user } = useContext(AuthContext);
+
   const [form, setForm] = useState({ email: "", password: "" });
   const [message, setMessage] = useState("");
   const navigate = useNavigate();
@@ -17,8 +19,14 @@ export default function SignIn() {
     setMessage("");
 
     try {
+      const data = await signIn(form.email, form.password);
+      const { access_token, id_role } = data;
+
       await loginWithPassword(form.email, form.password);
-      setMessage("Вход успешен!");
+      localStorage.setItem("access_token", access_token);
+      localStorage.setItem("id_role", id_role);
+
+      navigate(id_role === 1 ? "/admin" : "/home");
     } catch (err) {
       setMessage(
         "Ошибка входа: " + (err.response?.data?.detail || err.message)
@@ -64,6 +72,16 @@ export default function SignIn() {
       </form>
 
       <OAuthSuccess />
+
+      <p className="mt-4 text-center text-sm">
+        Нет аккаунта?{" "}
+        <span
+          className="text-blue-500 hover:underline cursor-pointer"
+          onClick={() => navigate("/sign-up")}
+        >
+          Зарегистрироваться
+        </span>
+      </p>
 
       {message && (
         <p className="mt-4 text-center text-sm text-red-600">{message}</p>

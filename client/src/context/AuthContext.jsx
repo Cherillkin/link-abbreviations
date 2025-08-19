@@ -44,7 +44,6 @@ export function AuthProvider({ children }) {
 
     const { access_token, id_role } = res.data;
 
-    // Сохраняем в state и cookie
     setIsAuthenticated(true);
     setUser({ email, id_role });
     document.cookie = `access_token=${access_token}; path=/; max-age=${
@@ -73,7 +72,6 @@ export function AuthProvider({ children }) {
       console.log("Logout error:", err);
     }
 
-    // Удаляем cookie
     document.cookie = "access_token=; path=/; max-age=0";
     document.cookie = "id_role=; path=/; max-age=0";
 

@@ -1,21 +1,18 @@
 import { useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
-import axios from "axios";
 import { Link } from "react-router-dom";
+import { logout as logoutApi } from "../api/auth";
 
 export default function Navbar() {
   const { logout, user } = useContext(AuthContext);
 
   const handleLogout = async () => {
     try {
-      await axios.post(
-        "http://127.0.0.1:8000/auth/logout",
-        {},
-        { withCredentials: true }
-      );
+      await logoutApi();
       logout();
     } catch (err) {
       console.error("Ошибка при выходе:", err.response?.data || err.message);
+      throw err;
     }
   };
 

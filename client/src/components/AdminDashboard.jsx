@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
+import { Bar } from "react-chartjs-2";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -9,7 +9,9 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
-import { Bar } from "react-chartjs-2";
+
+import { getShortLinks, getTopLinkStats } from "../api/shortLinks";
+import { createAdmin } from "../api/auth";
 
 ChartJS.register(
   CategoryScale,
@@ -30,38 +32,24 @@ export default function AdminDashboard() {
   const linksPerPage = 5;
 
   useEffect(() => {
-    const fetchShortLinks = async () => {
+    const fetchData = async () => {
       try {
-        const res = await axios.get("http://localhost:8000/short-links");
-        setShortLinks(res.data);
+        const linksRes = await getShortLinks();
+        setShortLinks(linksRes.data);
+
+        const statsRes = await getTopLinkStats();
+        setLinkStats(statsRes.data);
       } catch (err) {
-        console.error("Ошибка при получении коротких ссылок:", err);
+        console.error("Ошибка при получении данных:", err);
       }
     };
-
-    const fetchLinkStats = async () => {
-      try {
-        const res = await axios.get(
-          "http://localhost:8000/short-links/stats/top-links"
-        );
-        setLinkStats(res.data);
-      } catch (err) {
-        console.error("Ошибка при получении статистики переходов:", err);
-      }
-    };
-
-    fetchShortLinks();
-    fetchLinkStats();
+    fetchData();
   }, []);
 
   const handleCreateAdmin = async (e) => {
     e.preventDefault();
     try {
-      await axios.post(
-        "http://localhost:8000/auth/create",
-        { email, password },
-        { withCredentials: true }
-      );
+      await createAdmin(email, password);
       setMessage("Администратор успешно создан!");
       setEmail("");
       setPassword("");

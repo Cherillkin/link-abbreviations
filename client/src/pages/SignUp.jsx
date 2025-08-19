@@ -1,7 +1,7 @@
 import { useState, useContext } from "react";
-import axios from "axios";
-import { AuthContext } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { AuthContext } from "../context/AuthContext";
+import { signUp, signIn } from "../api/auth";
 import OAuthSuccess from "../components/OAuthSuccess";
 
 export default function SignUp() {
@@ -15,26 +15,21 @@ export default function SignUp() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setMessage("");
+
     try {
-      const response = await axios.post(
-        "http://localhost:8000/auth/sign-in",
-        form
-      );
-      const { access_token, id_role } = response.data;
+      await signUp(form.email, form.password);
+      const data = await signIn(form.email, form.password);
+      const { access_token, id_role } = data;
 
       login(access_token, id_role);
       localStorage.setItem("access_token", access_token);
       localStorage.setItem("id_role", id_role);
 
-      setMessage("Вход успешен!");
-      if (id_role === 1) {
-        navigate("/admin");
-      } else {
-        navigate("/");
-      }
+      navigate(id_role === 1 ? "/admin" : "/home");
     } catch (err) {
       setMessage(
-        "Ошибка входа: " + (err.response?.data?.detail || err.message)
+        "Ошибка регистрации: " + (err.response?.data?.detail || err.message)
       );
     }
   };
@@ -68,9 +63,19 @@ export default function SignUp() {
         >
           Зарегистрироваться
         </button>
-
-        <OAuthSuccess />
       </form>
+
+      <OAuthSuccess />
+
+      <p className="mt-4 text-center text-sm">
+        Уже есть аккаунт?{" "}
+        <span
+          className="text-blue-500 hover:underline cursor-pointer"
+          onClick={() => navigate("/sign-in")}
+        >
+          Войти
+        </span>
+      </p>
 
       {message && (
         <p className="mt-4 text-center text-sm text-red-600">{message}</p>

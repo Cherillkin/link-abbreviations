@@ -1,6 +1,6 @@
 import { useState } from "react";
 import QRCode from "qrcode";
-import axios from "axios";
+import { createShortLink } from "../api/shortLinks";
 
 const Home = () => {
   const [originalUrl, setOriginalUrl] = useState("");
@@ -25,16 +25,12 @@ const Home = () => {
       if (expiresAt) payload.expires_at = expiresAt;
       if (isProtected && password) payload.password = password;
 
-      const response = await axios.post(
-        "http://localhost:8000/short-links/",
-        payload,
-        { withCredentials: true }
-      );
+      const response = await createShortLink(payload);
 
       const short_code = response.data.short_code;
       if (!short_code) throw new Error("Нет short_code в ответе сервера");
 
-      setShortLink(`http://localhost:8000/short-links/r/${short_code}`);
+      setShortLink(`${"http://localhost:8000"}/short-links/r/${short_code}`);
     } catch (err) {
       setError(
         err.response?.data?.detail || err.message || "Ошибка создания ссылки"
