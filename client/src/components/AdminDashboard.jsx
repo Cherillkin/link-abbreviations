@@ -12,6 +12,7 @@ import {
 
 import { getShortLinks, getTopLinkStats } from "../api/shortLinks";
 import { createAdmin } from "../api/auth";
+import { createBackup } from "../api/backup";
 
 ChartJS.register(
   CategoryScale,
@@ -159,6 +160,13 @@ export default function AdminDashboard() {
         <h2 className="text-xl font-bold mb-4">Статистика переходов</h2>
         <Bar data={chartData} />
       </div>
+
+      <button
+        onClick={createBackup}
+        className="relative top-2 bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+      >
+        Скачать бэкап
+      </button>
     </div>
   );
 }

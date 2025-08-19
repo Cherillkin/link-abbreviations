@@ -16,6 +16,7 @@ from backend.routing.user import router as router_user, get_user_service
 from backend.services.auth import AuthService
 from backend.services.shortLinks import ShortLinkService
 from backend.services.user import UserService
+from backend.routing.database_backup import router as router_database_backup
 
 app = FastAPI(openapi_url="/core/openapi.json", docs_url="/core/docs")
 
@@ -54,3 +55,4 @@ app.include_router(router_auth)
 app.include_router(router_shortlinks)
 app.include_router(router_user)
 app.include_router(router_oauth)
+app.include_router(router_database_backup)
