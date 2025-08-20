@@ -1,3 +1,4 @@
+import os
 from datetime import datetime, timedelta
 from unittest.mock import MagicMock, AsyncMock
 import pytest
@@ -7,6 +8,7 @@ from jose import jwt
 from typing import Generator
 
 from backend.cmd.main import app
+
 from backend.config.config import settings
 from backend.routing.auth import get_auth_service
 from backend.schemas.auth import TokenResponse
@@ -93,7 +95,7 @@ def create_test_token() -> str:
         "sub": "test@example.com",
         "exp": datetime.utcnow() + timedelta(minutes=5),
     }
-    return jwt.encode(payload, settings.jwt_secret, algorithm=settings.algorithm)
+    return jwt.encode(payload, "test-secret", algorithm="HS256")
 
 
 @pytest.fixture

@@ -2,10 +2,16 @@ from fastapi import status
 from fastapi.testclient import TestClient
 from typing import Optional
 import uuid
+import pytest
 
 from backend.models.auth import User
+from backend.config.config import settings
 from tests.conftest import TestingSessionLocal
 
+@pytest.fixture(autouse=True)
+def set_test_jwt_settings() -> None:
+    settings.jwt_secret = "test-secret"
+    settings.algorithm = "HS256"
 
 def create_unique_user(email: Optional[str] = None) -> User:
     db = TestingSessionLocal()

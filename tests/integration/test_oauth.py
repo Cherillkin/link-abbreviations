@@ -4,7 +4,6 @@ from fastapi import status
 from unittest.mock import AsyncMock, patch
 from fastapi.testclient import TestClient
 
-# Фейковые переменные окружения для OAuth
 os.environ["GOOGLE_CLIENT_ID"] = "fake_id"
 os.environ["GOOGLE_CLIENT_SECRET"] = "fake_secret"
 os.environ["YANDEX_CLIENT_ID"] = "fake_id"

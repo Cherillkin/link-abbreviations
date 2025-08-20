@@ -30,6 +30,8 @@ export default function AdminDashboard() {
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const dateFrom = useState("");
+  const dateTo = useState("");
   const linksPerPage = 5;
 
   useEffect(() => {
@@ -60,6 +62,26 @@ export default function AdminDashboard() {
     }
   };
 
+  const getLinkClicks = (shortCode) => {
+    const stat = linkStats.find((s) => s.short_code === shortCode);
+    return stat ? stat.clicks : 0;
+  };
+
+  const filteredLinks = shortLinks.filter((link) => {
+    const createdAt = new Date(link.created_at);
+    const from = dateFrom ? new Date(dateFrom) : null;
+    const to = dateTo ? new Date(dateTo) : null;
+
+    if (from && createdAt < from) return false;
+    if (to && createdAt > to) return false;
+    return true;
+  });
+
+  const indexOfLastLink = currentPage * linksPerPage;
+  const indexOfFirstLink = indexOfLastLink - linksPerPage;
+  const currentLinks = filteredLinks.slice(indexOfFirstLink, indexOfLastLink);
+  const totalPages = Math.ceil(filteredLinks.length / linksPerPage);
+
   const chartData = {
     labels: linkStats.map((s) => s.short_code),
     datasets: [
@@ -71,14 +93,42 @@ export default function AdminDashboard() {
     ],
   };
 
-  const indexOfLastLink = currentPage * linksPerPage;
-  const indexOfFirstLink = indexOfLastLink - linksPerPage;
-  const currentLinks = shortLinks.slice(indexOfFirstLink, indexOfLastLink);
-  const totalPages = Math.ceil(shortLinks.length / linksPerPage);
+  const exportCSV = () => {
+    const headers = ["Код", "Оригинальная ссылка", "Переходы"];
+    const rows = filteredLinks.map((link) => [
+      link.short_code,
+      link.original_url,
+      getLinkClicks(link.short_code),
+    ]);
 
-  const getLinkClicks = (shortCode) => {
-    const stat = linkStats.find((s) => s.short_code === shortCode);
-    return stat ? stat.clicks : 0;
+    let csvContent =
+      "data:text/csv;charset=utf-8," +
+      [headers, ...rows].map((e) => e.join(",")).join("\n");
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "short_links.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const exportJSON = () => {
+    const data = filteredLinks.map((link) => ({
+      code: link.short_code,
+      url: link.original_url,
+      clicks: getLinkClicks(link.short_code),
+    }));
+
+    const jsonStr = JSON.stringify(data, null, 2);
+    const blob = new Blob([jsonStr], { type: "application/json" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "short_links.json";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   return (
@@ -139,7 +189,7 @@ export default function AdminDashboard() {
           </tbody>
         </table>
 
-        <div className="flex justify-center mt-4 gap-2 flex-wrap">
+        <div className="flex justify-center mt-4 gap-2">
           {Array.from({ length: totalPages }, (_, idx) => (
             <button
               key={idx + 1}
@@ -154,9 +204,24 @@ export default function AdminDashboard() {
             </button>
           ))}
         </div>
+
+        <div className="mt-4 flex justify-center gap-2">
+          <button
+            onClick={exportCSV}
+            className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
+          >
+            Экспорт CSV
+          </button>
+          <button
+            onClick={exportJSON}
+            className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
+          >
+            Экспорт JSON
+          </button>
+        </div>
       </div>
 
-      <div className="bg-white p-4 rounded shadow">
+      <div className="bg-white p-4 rounded shadow mb-6">
         <h2 className="text-xl font-bold mb-4">Статистика переходов</h2>
         <Bar data={chartData} />
       </div>

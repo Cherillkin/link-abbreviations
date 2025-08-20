@@ -16,9 +16,9 @@ class Settings(BaseSettings):
         "redis://localhost:6379/0", validation_alias="CELERY_RESULT_BACKEND"
     )
 
-    secret_key: str = Field("89U2NOjW-I", validation_alias="SECRET_KEY")
-    jwt_secret: str = Field("9VHleSjX-C", validation_alias="JWT_SECRET")
-    algorithm: str = Field("HS256", validation_alias="ALGORITHM")
+    secret_key: Optional[str] = Field(None, validation_alias="SECRET_KEY")
+    jwt_secret: Optional[str] = Field(None, validation_alias="JWT_SECRET")
+    algorithm: Optional[str] = Field(None, validation_alias="ALGORITHM")
     access_token_expire_minutes: int = Field(
         30, validation_alias="ACCESS_TOKEN_EXPIRE_MINUTES"
     )

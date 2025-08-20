@@ -1,5 +1,7 @@
 FROM python:3.11-alpine
 
+RUN apk add --no-cache postgresql-client gcc musl-dev python3-dev libffi-dev
+
 WORKDIR /app
 
 COPY requirements.txt ./requirements.txt
