@@ -72,19 +72,20 @@ def get_links_code(
     return service.get_all_links_code(db)
 
 
-@router.get(
-    "/r/{code}",
-    responses={status.HTTP_400_BAD_REQUEST: {"description": "Bad Request"}},
-    description="Перенаправление пользователя по новой ссылке",
-)
+@router.get("/r/{code}")
 def redirect_to_original(
     code: str,
     request: Request,
     db: Session = Depends(get_db),
     service: ShortLinkService = Depends(get_short_link_service),
-) -> RedirectResponse:
-    url = service.redirect(db, code, request)
-    return RedirectResponse(url=url)
+) -> Union[RedirectResponse, dict]:
+    result = service.redirect(db, code, request)
+
+    if isinstance(result, dict) and result.get("status") == "protected":
+        return result
+
+    # Иначе редирект на оригинальный URL
+    return RedirectResponse(url=result)
 
 
 @router.get(
@@ -139,3 +140,28 @@ def generate_qr_for_link(
     qr_base64 = generate_qr_code(short_url)
 
     return {"qr_code": f"data:image/png;base64,{qr_base64}"}
+
+@router.get(
+    "/user/",
+    response_model=List[ShortLinkInfoWithClick],
+    description="Получение всех коротких ссылок текущего пользователя",
+)
+def get_user_links(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    service: ShortLinkService = Depends(get_short_link_service),
+) -> List[ShortLinkInfoWithClick]:
+    return service.get_user_links(db, current_user)
+
+@router.delete(
+    "/user/{code}",
+    description="Удаление короткой ссылки текущего пользователя",
+)
+def delete_user_link(
+    code: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    service: ShortLinkService = Depends(get_short_link_service),
+) -> dict:
+    service.delete_user_link(db, current_user, code)
+    return {"status": "deleted", "short_code": code}

@@ -9,3 +9,11 @@ export const getTopLinkStats = () =>
 
 export const createShortLink = (payload) =>
   axios.post(`${API_URL}/short-links/`, payload, { withCredentials: true });
+
+export const getShortUser = () =>
+  axios.get(`${API_URL}/short-links/user/`, { withCredentials: true });
+
+export const deleteShortUser = (shortCode) =>
+  axios.delete(`${API_URL}/short-links/user/${shortCode}`, {
+    withCredentials: true,
+  });

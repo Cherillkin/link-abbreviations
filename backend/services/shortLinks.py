@@ -90,7 +90,7 @@ class ShortLinkService:
 
         return links
 
-    def redirect(self, db: Session, code: str, request: Request) -> str:
+    def redirect(self, db: Session, code: str, request: Request) -> dict:
         link = self.repository.get_by_code(db, code)
         if not link:
             raise HTTPException(
@@ -103,10 +103,7 @@ class ShortLinkService:
             )
 
         if link.is_protected:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Password is required to access this link",
-            )
+            return {"status": "protected", "is_protected": True}
 
         log_click_task.delay(
             link.id_link,
@@ -115,7 +112,7 @@ class ShortLinkService:
             request.headers.get("referer"),
         )
 
-        return link.original_url
+        return {"status": "ok", "is_protected": False, "redirect_url": link.original_url}
 
     def get_top_links_stats(self, db: Session, limit: int = 5) -> List[Dict]:
         results = self.repository.get_top_links_last_7_days(db, limit)
@@ -141,3 +138,26 @@ class ShortLinkService:
             )
 
         return link
+
+    def get_user_links(self, db: Session, user: User) -> List[ShortLinkInfoWithClick]:
+        links = self.repository.get_by_user(db, user.id_user)
+        return [
+            ShortLinkInfoWithClick(
+                short_code=link.short_code,
+                original_url=link.original_url,
+                created_at=link.created_at,
+                expires_at=link.expires_at,
+                click_count=self.repository.count_clicks(db, link.id_link),
+            )
+            for link in links
+        ]
+
+    def delete_user_link(self, db: Session, user: User, code: str) -> dict:
+        link = self.repository.get_by_code(db, code)
+        if not link or link.id_creator != user.id_user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Link not found or you do not have permission to delete it",
+            )
+        self.repository.delete(db, link)
+        return {"status": "deleted", "short_code": code}

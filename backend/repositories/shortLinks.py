@@ -49,3 +49,10 @@ class ShortLinkRepository:
 
     def get_all_links_code(self, db: Session) -> List[ShortLink]:
         return db.query(ShortLink).all()
+
+    def get_by_user(self, db: Session, user_id: int) -> List[ShortLink]:
+        return db.query(ShortLink).filter_by(id_creator=user_id).all()
+
+    def delete(self, db: Session, link: ShortLink) -> None:
+        db.delete(link)
+        db.commit()
