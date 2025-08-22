@@ -101,14 +101,14 @@ export default function AdminDashboard() {
       getLinkClicks(link.short_code),
     ]);
 
-    let csvContent =
-      "data:text/csv;charset=utf-8," +
-      [headers, ...rows].map((e) => e.join(",")).join("\n");
+    const csvContent =
+      "\uFEFF" + [headers, ...rows].map((e) => e.join(";")).join("\n");
 
-    const encodedUri = encodeURI(csvContent);
+    const csvBlob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+
     const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", "short_links.csv");
+    link.href = URL.createObjectURL(csvBlob);
+    link.download = "short_links.csv";
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

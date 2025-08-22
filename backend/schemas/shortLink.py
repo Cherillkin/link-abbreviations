@@ -15,8 +15,10 @@ class ShortLinkInfo(BaseModel):
     short_code: str
     original_url: HttpUrl
     expires_at: Optional[datetime]
+    is_protected: Optional[bool] = None
 
 
 class ShortLinkInfoWithClick(ShortLinkInfo):
     created_at: datetime
     click_count: Optional[int] = None
+    is_protected: Optional[bool] = None

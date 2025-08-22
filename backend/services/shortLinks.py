@@ -2,7 +2,9 @@ from datetime import datetime
 
 from fastapi import HTTPException, Request, status
 from sqlalchemy.orm import Session
-from typing import List, Union, Dict
+from typing import List, Union, Dict, Optional
+
+from starlette.responses import RedirectResponse
 
 from backend.config.config import settings
 from backend.databases.redis_db import redis_client
@@ -90,20 +92,23 @@ class ShortLinkService:
 
         return links
 
-    def redirect(self, db: Session, code: str, request: Request) -> dict:
+    def redirect(
+            self,
+            db: Session,
+            code: str,
+            request: Request,
+            password: Optional[str] = None
+    ) -> Union[RedirectResponse, dict]:
         link = self.repository.get_by_code(db, code)
         if not link:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Link not found"
-            )
+            raise HTTPException(status_code=404, detail="Link not found")
 
         if link.expires_at and link.expires_at < datetime.utcnow():
-            raise HTTPException(
-                status_code=status.HTTP_410_GONE, detail="Link has expired"
-            )
+            raise HTTPException(status_code=410, detail="Link has expired")
 
         if link.is_protected:
-            return {"status": "protected", "is_protected": True}
+            if password is None or password != link.password:
+                return {"status": "protected", "is_protected": True}
 
         log_click_task.delay(
             link.id_link,
@@ -112,7 +117,7 @@ class ShortLinkService:
             request.headers.get("referer"),
         )
 
-        return {"status": "ok", "is_protected": False, "redirect_url": link.original_url}
+        return RedirectResponse(url=link.original_url)
 
     def get_top_links_stats(self, db: Session, limit: int = 5) -> List[Dict]:
         results = self.repository.get_top_links_last_7_days(db, limit)

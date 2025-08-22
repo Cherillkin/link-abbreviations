@@ -13,9 +13,8 @@ import SignUp from "./pages/SignUp";
 import SignIn from "./pages/SignIn";
 import AdminDashboard from "./components/AdminDashboard";
 import { AuthContext, AuthProvider } from "./context/AuthContext";
-import OAuthSuccess from "./components/OAuthSuccess";
 import OAuthCallback from "./utils/OAuthCallback";
-
+import RedirectPage from "./components/RedirectPage";
 function AppContent() {
   const { isAuthenticated, loading, user } = useContext(AuthContext);
 
@@ -60,6 +59,7 @@ function AppContent() {
               )
             }
           />
+          <Route path="/r/:code" element={<RedirectPage />} />
           <Route
             path="*"
             element={

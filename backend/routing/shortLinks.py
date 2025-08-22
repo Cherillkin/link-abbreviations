@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Depends, Request, status
 from sqlalchemy.orm import Session
+from typing import List, Union, Optional
+
 from starlette.responses import RedirectResponse
-from typing import List, Union
 
 from backend.databases.postgres import get_db
 from backend.models import ShortLink
@@ -26,7 +27,7 @@ def get_short_link_service() -> ShortLinkService:
 @router.post(
     "/",
     responses={status.HTTP_400_BAD_REQUEST: {"description": "Bad Request"}},
-    response_model=ShortLinkInfo,
+    response_model=ShortLinkInfoWithClick,
     description="Создание ссылки",
 )
 async def create_short_link(
@@ -34,13 +35,14 @@ async def create_short_link(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
     service: ShortLinkService = Depends(get_short_link_service),
-) -> ShortLinkInfo:
+) -> ShortLinkInfoWithClick:
     link = service.create(db, current_user, data)
-    return ShortLinkInfo(
+    return ShortLinkInfoWithClick(
         short_code=link.short_code,
         original_url=link.original_url,
         created_at=link.created_at,
         expires_at=link.expires_at,
+        is_protected=link.is_protected,
         click_count=0,
     )
 
@@ -72,21 +74,15 @@ def get_links_code(
     return service.get_all_links_code(db)
 
 
-@router.get("/r/{code}")
+@router.get("/r/{code}", response_model=None)
 def redirect_to_original(
     code: str,
     request: Request,
+    password: Optional[str] = None,
     db: Session = Depends(get_db),
     service: ShortLinkService = Depends(get_short_link_service),
 ) -> Union[RedirectResponse, dict]:
-    result = service.redirect(db, code, request)
-
-    if isinstance(result, dict) and result.get("status") == "protected":
-        return result
-
-    # Иначе редирект на оригинальный URL
-    return RedirectResponse(url=result)
-
+    return service.redirect(db, code, request, password)
 
 @router.get(
     "/stats/top-links",
@@ -118,7 +114,6 @@ def verify_password(
     if isinstance(link, dict):
         return link
 
-    # иначе это ShortLink
     status = "not_protected" if not link.is_protected else "ok"
     return {"status": status, "redirect_url": link.original_url}
 

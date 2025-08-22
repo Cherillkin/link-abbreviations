@@ -13,6 +13,8 @@ const Home = () => {
   const [isProtected, setIsProtected] = useState(false);
   const [password, setPassword] = useState("");
   const [shortLink, setShortLink] = useState(null);
+  const [shortCode, setShortCode] = useState("");
+  const [shortIsProtected, setShortIsProtected] = useState(false);
   const [qrImage, setQrImage] = useState(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -21,12 +23,13 @@ const Home = () => {
   const [userLinks, setUserLinks] = useState([]);
   const [linksLoading, setLinksLoading] = useState(false);
 
-  // Создание короткой ссылки
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     setShortLink(null);
     setQrImage(null);
+    setShortCode("");
+    setShortIsProtected(false);
     setLoading(true);
 
     try {
@@ -36,16 +39,20 @@ const Home = () => {
       if (isProtected && password) payload.password = password;
 
       const response = await createShortLink(payload);
-      const short_code = response.data.short_code;
-      if (!short_code) throw new Error("Нет short_code в ответе сервера");
+      const code = response.data.short_code;
+      if (!code) throw new Error("Нет short_code в ответе сервера");
 
-      const frontendLink = `http://localhost:5173/short-links/r/${short_code}`;
+      setShortCode(code);
+      setShortIsProtected(response.data.is_protected);
+
+      const frontendLink = `${window.location.origin}/r/${code}`;
       setShortLink(frontendLink);
 
-      const qrDataUrl = await QRCode.toDataURL(frontendLink);
-      setQrImage(qrDataUrl);
-
-      if (drawerOpen) loadUserLinks();
+      // Генерируем QR-код только если ссылка не защищена
+      if (!response.data.is_protected) {
+        const qrDataUrl = await QRCode.toDataURL(frontendLink);
+        setQrImage(qrDataUrl);
+      }
     } catch (err) {
       setError(
         err.response?.data?.detail || err.message || "Ошибка создания ссылки"
@@ -55,24 +62,65 @@ const Home = () => {
     }
   };
 
+  const handleClickShortLink = async (code, isProtected) => {
+    const url = `${window.location.origin}/r/${code}`;
+    if (!isProtected) {
+      window.open(url, "_blank");
+      return;
+    }
+
+    let success = false;
+    while (!success) {
+      const pwd = prompt("Введите пароль для ссылки:");
+      if (pwd === null) return;
+
+      try {
+        const res = await fetch(
+          `http://localhost:8000/short-links/verify-password?code=${encodeURIComponent(
+            code
+          )}&password=${encodeURIComponent(pwd)}`,
+          { method: "POST" }
+        );
+        const data = await res.json();
+
+        if (data.status === "ok") {
+          window.open(data.redirect_url, "_blank");
+
+          // Генерация QR-кода после правильного пароля
+          const qrDataUrl = await QRCode.toDataURL(data.redirect_url);
+          setQrImage(qrDataUrl);
+          success = true;
+        } else if (data.status === "protected") {
+          alert(data.message || "Неверный пароль");
+        } else {
+          alert("Ошибка: " + JSON.stringify(data));
+          return;
+        }
+      } catch (err) {
+        alert("Ошибка при проверке пароля: " + err);
+        return;
+      }
+    }
+  };
+
   const loadUserLinks = async () => {
     setLinksLoading(true);
     try {
       const response = await getShortUser();
       setUserLinks(response.data);
     } catch (err) {
-      setError("Ошибка загрузки ссылок: ", err);
+      setError("Ошибка загрузки ссылок: " + err);
     } finally {
       setLinksLoading(false);
     }
   };
 
-  const handleDelete = async (short_code) => {
+  const handleDelete = async (code) => {
     try {
-      await deleteShortUser(short_code);
-      setUserLinks(userLinks.filter((link) => link.short_code !== short_code));
+      await deleteShortUser(code);
+      setUserLinks(userLinks.filter((link) => link.short_code !== code));
     } catch (err) {
-      setError("Ошибка удаления ссылки: ", err);
+      setError("Ошибка удаления ссылки: " + err);
     }
   };
 
@@ -82,7 +130,6 @@ const Home = () => {
 
   return (
     <div className="relative flex bg-gray-100">
-      {/* Основной контент */}
       <div className="flex-1 max-w-lg mx-auto p-6 mt-10 bg-white shadow-lg rounded-lg">
         <h1 className="text-2xl font-bold mb-6 text-center">
           Создать короткую ссылку
@@ -165,16 +212,27 @@ const Home = () => {
         </form>
 
         {shortLink && (
-          <div className="mt-4 p-4 bg-green-100 border border-green-300 rounded-md">
-            <strong>Ваша короткая ссылка:</strong>{" "}
-            <a
-              href={shortLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-600 underline"
+          <div className="mt-4 p-4 bg-green-100 border border-green-300 rounded-md flex items-center justify-between">
+            <div>
+              <strong>Ваша короткая ссылка:</strong>{" "}
+              <button
+                onClick={() =>
+                  handleClickShortLink(shortCode, shortIsProtected)
+                }
+                className="text-blue-600 underline break-all"
+              >
+                {shortLink}
+              </button>
+            </div>
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText(shortLink);
+                alert("Ссылка скопирована!");
+              }}
+              className="ml-4 bg-blue-500 hover:bg-blue-600 text-white font-bold py-1 px-3 rounded-md"
             >
-              {shortLink}
-            </a>
+              Копировать
+            </button>
           </div>
         )}
 
@@ -191,7 +249,6 @@ const Home = () => {
         )}
       </div>
 
-      {/* Drawer */}
       <div
         className={`fixed top-0 right-0 h-full w-110 bg-white shadow-lg transform transition-transform duration-300 ${
           drawerOpen ? "translate-x-0" : "translate-x-full"
@@ -210,14 +267,14 @@ const Home = () => {
                 className="flex justify-between items-center p-2 bg-gray-50 border rounded-md"
               >
                 <div>
-                  <a
-                    href={`http://localhost:5173/short-links/r/${link.short_code}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                  <button
+                    onClick={() =>
+                      handleClickShortLink(link.short_code, link.is_protected)
+                    }
                     className="text-blue-600 underline"
                   >
                     {link.short_code}
-                  </a>
+                  </button>
                   <p className="text-gray-600 text-sm truncate w-64">
                     {link.original_url}
                   </p>
