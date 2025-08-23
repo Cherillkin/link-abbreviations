@@ -11,8 +11,10 @@ from backend.databases.redis_db import redis_client
 from backend.models.auth import User
 from backend.models.shortLink import ShortLink
 from backend.repositories.shortLinks import ShortLinkRepository
+from backend.utils.auth import verify_password
 from backend.schemas.shortLink import ShortLinkCreate, ShortLinkInfoWithClick
 from backend.tasks.shortlinks import log_click_task
+from backend.utils.auth import hash_password
 from backend.utils.shortlink import (
     generate_unique_code,
     check_link_limit,
@@ -43,6 +45,8 @@ class ShortLinkService:
                 status_code=status.HTTP_400_BAD_REQUEST, detail="Code is already using"
             )
 
+        hashed_password = hash_password(data.password) if data.password else None
+
         try:
             link = ShortLink(
                 original_url=str(data.original_url),
@@ -50,7 +54,7 @@ class ShortLinkService:
                 id_creator=user.id_user,
                 expires_at=data.expires_at,
                 is_protected=data.is_protected,
-                password=data.password,
+                password=hashed_password,
             )
 
             created_link = self.repository.create(db, link)
@@ -107,7 +111,7 @@ class ShortLinkService:
             raise HTTPException(status_code=410, detail="Link has expired")
 
         if link.is_protected:
-            if password is None or password != link.password:
+            if password is None or not verify_password(password, link.password):
                 return {"status": "protected", "is_protected": True}
 
         log_click_task.delay(
@@ -126,7 +130,7 @@ class ShortLinkService:
         ]
 
     def verify_password_short_link(
-        self, db: Session, code: str, password: str
+            self, db: Session, code: str, password: str
     ) -> Union[dict, ShortLink]:
         link = self.repository.get_by_code(db, code)
         if not link:
@@ -137,7 +141,7 @@ class ShortLinkService:
         if not link.is_protected:
             return {"status": "not_protected", "redirect_url": link.original_url}
 
-        if link.password != password:
+        if not verify_password(password, link.password):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN, detail="Invalid password"
             )
