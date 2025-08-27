@@ -35,11 +35,11 @@ class Settings(BaseSettings):
 
     database_url: str = Field("sqlite:///./test.db", validation_alias="DATABASE_URL")
 
-    postgres_user: str = Field(None, validation_alias="POSTGRES_USER")
-    postgres_password: str = Field(None, validation_alias="POSTGRES_PASSWORD")
-    postgres_db: str = Field(None, validation_alias="POSTGRES_DB")
-    postgres_host: str = Field(None, validation_alias="POSTGRES_HOST")
-    postgres_port: int = Field(None, validation_alias="POSTGRES_PORT")
+    postgres_user: Optional[str] = Field(None, validation_alias="POSTGRES_USER")
+    postgres_password: Optional[str] = Field(None, validation_alias="POSTGRES_PASSWORD")
+    postgres_db: Optional[str] = Field(None, validation_alias="POSTGRES_DB")
+    postgres_host: Optional[str] = Field(None, validation_alias="POSTGRES_HOST")
+    postgres_port: Optional[int] = Field(None, validation_alias="POSTGRES_PORT")
 
     google_client_id: Optional[str] = Field(None, validation_alias="GOOGLE_CLIENT_ID")
     google_client_secret: Optional[str] = Field(None, validation_alias="GOOGLE_CLIENT_SECRET")
