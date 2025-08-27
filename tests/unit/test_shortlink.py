@@ -1,9 +1,10 @@
 import pytest
 from fastapi import status
-from fastapi.testclient import TestClient
-from datetime import datetime, timedelta
-from unittest.mock import MagicMock
 from typing import Generator
+from unittest.mock import MagicMock
+from datetime import datetime, timedelta
+from fastapi.testclient import TestClient
+from fastapi.responses import RedirectResponse
 
 from pytest_mock import MockerFixture
 
@@ -111,13 +112,17 @@ def test_get_all_links(
 def test_redirect_to_original(
     client: TestClient, override_dependencies: MagicMock, fake_short_link: ShortLink
 ) -> None:
-    override_dependencies.redirect.return_value = fake_short_link.original_url
+    override_dependencies.redirect.return_value = RedirectResponse(
+        url=fake_short_link.original_url,
+        status_code=status.HTTP_307_TEMPORARY_REDIRECT,
+    )
+
     response = client.get(
         f"/short-links/r/{fake_short_link.short_code}", follow_redirects=False
     )
+
     assert response.status_code == status.HTTP_307_TEMPORARY_REDIRECT
     assert response.headers["location"] == fake_short_link.original_url
-
 
 def test_verify_password_not_protected(
     client: TestClient, override_dependencies: MagicMock, fake_short_link: ShortLink
