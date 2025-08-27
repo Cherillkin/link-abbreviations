@@ -69,6 +69,23 @@ services:
       - redis
       - postgres
 
+  frontend:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    container_name: frontend
+    command: [ "npm", "run", "dev", "--", "--host", "0.0.0.0"]
+    working_dir: /app/client
+    volumes:
+      - ./client:/app/client
+      - /app/client/node_modules
+    ports:
+      - "5173:5173"   
+    environment:
+      - VITE_BACKEND_URL=http://backend:8000
+    depends_on:
+      - backend
+
 volumes:
   postgresDB:
   redisDB:
