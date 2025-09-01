@@ -23,7 +23,7 @@ class Settings(BaseSettings):
         30, validation_alias="ACCESS_TOKEN_EXPIRE_MINUTES"
     )
 
-    daily_link_limit: int = Field(100, validation_alias="DAILY_LINK_LIMIT")
+    daily_link_limit: int = Field(3, validation_alias="DAILY_LINK_LIMIT")
     link_count_ttl: int = Field(86400, validation_alias="LINK_COUNT_TTL")
     cache_ttl: int = Field(3600, validation_alias="CACHE_TTL")
 

@@ -1,9 +1,10 @@
 from pydantic import BaseModel
 from datetime import datetime
+from pydantic import EmailStr
 
 
 class UserBase(BaseModel):
-    email: str
+    email: EmailStr
 
 
 class RegisterUser(UserBase):
